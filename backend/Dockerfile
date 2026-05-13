@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install production dependencies using `npm ci`, which is faster and more secure than `npm install`.
-#RUN npm ci --omit=dev
+RUN npm install --omit=production
 
 
 ### STAGE 2: Production ###
