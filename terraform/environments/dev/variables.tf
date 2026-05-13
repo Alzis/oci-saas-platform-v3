@@ -62,20 +62,17 @@ variable "ssh_source_cidr" {
 
 variable "instance_shape" {
   description = "The shape of the VM. This is set by the retry script."
-  type        = string
-  default     = "VM.Standard.A1.Flex" # Default for manual runs
+  default     = "VM.Standard.E2.1.Micro"
 }
 
 variable "instance_ocpus" {
   description = "The number of OCPUs for the VM. This is set by the retry script."
-  type        = number
-  default     = 1 # Default for manual runs (e.g., terraform plan)
+  default     = 1 # For Micro shape, this is fixed.
 }
 
 variable "instance_memory_in_gbs" {
   description = "The amount of memory in GBs for the VM. This is set by the retry script."
-  type        = number
-  default     = 6 # Default for manual runs (e.g., terraform plan)
+  default     = 1 # For Micro shape, this is fixed.
 }
 
 variable "availability_domain_index" {
@@ -85,7 +82,7 @@ variable "availability_domain_index" {
 }
 
 variable "api_domain" {
-  description = "The domain name for the API endpoint (e.g., api.example.com)."
+  description = "The domain name for the API endpoint (e.g., api.yourdomain.com)."
   type        = string
 }
 
@@ -105,28 +102,4 @@ variable "create_observability_vm" {
   description = "Set to true to create a dedicated VM for the observability stack."
   type        = bool
   default     = true
-}
-
-variable "private_subnet_cidr" {
-  description = "The CIDR block for the private subnet."
-  type        = string
-  default     = "10.0.2.0/24"
-}
-
-variable "db_admin_username" {
-  description = "The username for the PostgreSQL admin user."
-  type        = string
-  default     = "pgadmin"
-}
-
-variable "db_admin_password" {
-  description = "The password for the PostgreSQL admin user."
-  type        = string
-  sensitive   = true
-}
-
-variable "db_name" {
-  description = "The name of the PostgreSQL database."
-  type        = string
-  default     = "saasdb"
 }

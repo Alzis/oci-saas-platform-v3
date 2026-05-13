@@ -30,8 +30,7 @@ Redis + MySQL
 Frontend hospedado em bucket.
 Frontend consome API pública da VM OCI.
 
-# oci-saas-platform
-# oci-saas-platform-v2
+# oci-saas-platform-v3
 
 
 terraform apply -auto-approve \
@@ -39,4 +38,3 @@ terraform apply -auto-approve \
         -var="instance_shape=VM.Standard.E2.1.Micro" \
         -var="instance_ocpus=1" \
         -var="instance_memory_in_gbs=1";
-# oci-saas-platform-v3

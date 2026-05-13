@@ -62,106 +62,107 @@
 
         <div class="section bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-lg p-8 mb-16">
             <h2 class="text-3xl font-bold text-white border-b border-gray-700 pb-4 mb-8">Fluxograma da Arquitetura</h2>
-            <div class="mermaid bg-gray-900/50 border border-gray-700 rounded-lg p-6 text-center">
+            <p class="text-gray-400 mb-8">Esta arquitetura foi desenhada para ser minimalista e de baixo custo, utilizando os recursos do OCI Always Free, mas sem sacrificar a escalabilidade futura. Ela é ideal para um MVP (Minimum Viable Product) de um SaaS.</p>
+            <div class="mermaid bg-gray-900/70 border border-gray-700 rounded-lg p-6 text-center">
 graph TD
     subgraph "Usuário & Frontend"
-        U[👨‍💻 Usuário] -->|Acessa URL| FB(OCI Object Storage Bucket)
-        FB -- "Serve index.html (React SPA)" --> U
+        U[👨‍💻 Usuário] -->|Acessa URL do App| FB(OCI Object Storage Bucket)
+        FB -- "Serve Single Page Application" --> U
     end
 
     subgraph "Rede e Borda da OCI"
-        U -->|Requisição para api.dominio.com| LB(OCI Load Balancer)
+        U -->|Requisição para api.dominio.com| LB(OCI Load Balancer<br>Ponto de Entrada Único)
     end
 
-    subgraph "Infraestrutura de Computação (VMs)"
-        LB -->|Distribui tráfego| VM1(VM 1 - Docker)
-        LB -->|...| VMN(VM N - Docker)
+    subgraph "Infraestrutura de Computação (Always Free)"
+        LB -->|Distribui tráfego| VM_APP(VM de Aplicação<br>VM.Standard.E2.1.Micro)
+        style VM_APP fill:#282c34,stroke:#61afef,stroke-width:2px,color:#fff
+        
+        VM_OBS(VM de Observabilidade<br>VM.Standard.E2.1.Micro)
+        style VM_OBS fill:#282c34,stroke:#98c379,stroke-width:2px,color:#fff
     end
-    
+
     subgraph "OCI Managed Services (PaaS)"
-        DB[(🐘 OCI Database<br>PostgreSQL)]
-    end
-    RD_EXT["⚡ Cache Service<br>(Redis Externo)"]
-    
-    subgraph "VM de Observabilidade (Dedicada)"
-        direction LR
-        VM_OBS(VM Observability) --> OBS_STACK(Observability Stack<br>Prometheus, Grafana, Loki)
-    end
-
-    subgraph "VM App 1 - Ambiente Docker"
-        direction LR
-        VM1 --> T1(Traefik)
-        T1 -->|Roteia| API1(API Node.js) 
-        VM1 -- "Envia Métricas/Logs" --> VM_OBS
+        DB[(🗃️ OCI MySQL HeatWave<br>Banco de Dados Gerenciado)]
+        style DB fill:#00758f,stroke:#fff,stroke-width:2px,color:#fff
     end
     
-    subgraph "VM App N - Ambiente Docker"
+    subgraph "VM de Aplicação - Ambiente Docker"
         direction LR
-        VMN --> TN(Traefik)
-        TN -->|Roteia| APIN(API Node.js)
-        VMN -- "Envia Métricas/Logs" --> VM_OBS
+        VM_APP --> T(Traefik)
+        T -->|Roteia| API(API Node.js) 
+        API --> RD[⚡ Redis]
+        API -- "Conexão Privada" --> DB
+    end
+    
+    subgraph "VM de Observabilidade - Ambiente Docker"
+        direction LR
+        VM_OBS --> OBS_STACK(Observability Stack<br>Prometheus, Grafana)
     end
 
-    API1 --> DB
-    APIN --> DB
-
-    API1 --> RD_EXT
-    APIN --> RD_EXT
-
-    subgraph "Provisionamento & Deploy"
+    subgraph "Provisionamento & Deploy (CI/CD)"
         direction LR
-        DEV[👨‍💻 Dev] -- "terraform apply" --> OCI(OCI API) -- "Cria" --> VCN(VCN, LB, VMs...)
-        DEV -- "git push" --> GH(GitHub) -- "CI/CD" --> GHA(GitHub Actions)
-        GHA -- "Deploy" --> VM1
-        GHA -- "Deploy" --> VMN
-        GHA -- "Deploy" --> VM_OBS
+        DEV[👨‍💻 Dev] -- "terraform apply" --> OCI_API(OCI API) -- "Cria Infra" --> VCN(VCN, LB, VMs...)
+        DEV -- "git push" --> GH(GitHub) -- "Aciona Workflow" --> GHA(GitHub Actions)
+        GHA -- "Deploy via SSH" --> VM_APP
+        GHA -- "Deploy via SSH" --> VM_OBS
     end
 
-    style U fill:#007bff,stroke:#fff,stroke-width:2px,color:#fff
-    style DEV fill:#007bff,stroke:#fff,stroke-width:2px,color:#fff
-    style OCI fill:#f80000,stroke:#fff,stroke-width:2px,color:#fff
+    VM_APP -- "Coleta de Métricas" --> VM_OBS
+
+    style U fill:#61afef,stroke:#fff,stroke-width:2px,color:#fff
+    style DEV fill:#61afef,stroke:#fff,stroke-width:2px,color:#fff
+    style OCI_API fill:#f80000,stroke:#fff,stroke-width:2px,color:#fff
     style GH fill:#24292e,stroke:#fff,stroke-width:2px,color:#fff
 
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
                 <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
                     <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M5.834 7.166l-1.591-1.591M3.75 10.5H6m-2.25 4.5l1.591 1.591M12 19.5V21.75" /></svg>1. O Fluxo do Usuário</h3>
-                    <p>O usuário acessa a URL do frontend, que é um arquivo HTML servido publicamente por um Bucket no OCI Object Storage. O navegador carrega a aplicação (React SPA), que por sua vez faz chamadas para o backend (api.dominio.com).</p>
+                    <p>O usuário acessa a URL do frontend, que é um arquivo HTML servido publicamente por um Bucket no OCI Object Storage. O navegador carrega a aplicação (SPA), que por sua vez faz chamadas para o backend (api.dominio.com).</p>
                 </div>
                 <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
                     <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.115 5.19l.319 1.913A6 6 0 008.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 002.288-4.042 1.087 1.087 0 00-.358-1.099l-1.33-1.108c-.251-.21-.582-.299-.905-.245l-1.17.195a1.125 1.125 0 01-.98-.98l.195-1.17a.565.565 0 00-.245-.905l-1.108-1.33c-.29-.358-.76-.44-1.1-.358a8.7 8.7 0 00-4.042 2.288z" /></svg>2. Rede e Balanceamento</h3>
-                    <p>As requisições para a API chegam primeiro a um Load Balancer da OCI. Ele é o ponto de entrada público para o backend, responsável por distribuir as requisições de forma equilibrada entre as <strong>N</strong> máquinas virtuais disponíveis, garantindo alta disponibilidade e escalabilidade horizontal.</p>
+                    <p>As requisições para a API chegam a um <strong>Load Balancer</strong> da OCI. Ele atua como ponto de entrada central e estável, direcionando o tráfego para a VM de aplicação. Essa peça é fundamental para permitir o crescimento futuro, possibilitando adicionar mais VMs de aplicação sem alterar a arquitetura.</p>
                 </div>
                 <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
                     <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>3. Ambiente de Execução</h3>
-                    <p>A arquitetura separa as responsabilidades: <strong>VMs de Aplicação</strong> rodam a API (Node.js), o reverse proxy (Traefik) e o cache (Redis). Uma <strong>VM de Observabilidade</strong> dedicada centraliza a coleta e visualização de métricas (Prometheus) e logs (Loki) de todo o ambiente.</p>
+                    <p>A arquitetura utiliza duas VMs <strong>VM.Standard.E2.1.Micro</strong> (Always Free): uma para a <strong>Aplicação</strong> (API, Proxy, DB, Cache) e outra dedicada à <strong>Observabilidade</strong> (Métricas e Dashboards), garantindo isolamento de recursos e simplicidade operacional.</p>
                 </div>
                 <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
-                    <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m19.5 0a3 3 0 01-3 3H5.25a3 3 0 01-3-3m19.5 0a3 3 0 00-3-3H5.25a3 3 0 00-3 3m16.5 0h.008v.008h-.008v-.008z" /></svg>4. Serviços de Backend</h3>
-                    <p>A API Node.js se comunica com um serviço gerenciado de PostgreSQL para persistência e com um serviço de cache Redis. A implementação do Redis é flexível, podendo ser um serviço gerenciado (PaaS), uma VM dedicada ou outra fonte externa, garantindo um cache centralizado.</p>
+                    <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m19.5 0a3 3 0 01-3 3H5.25a3 3 0 01-3-3m19.5 0a3 3 0 00-3-3H5.25a3 3 0 00-3 3m16.5 0h.008v.008h-.008v-.008z" /></svg>4. Persistência de Dados</h3>
+                    <p>O banco de dados principal é o <strong>OCI MySQL HeatWave</strong>, um serviço gerenciado que oferece alta performance, backups automáticos e escalabilidade. O cache de sessão e de operações rápidas é feito pelo <strong>Redis</strong>, que roda como um container Docker na VM da aplicação.</p>
                 </div>
                 <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
                     <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75c0 3.142-2.558 5.69-5.69 5.69s-5.69-2.548-5.69-5.69c0-3.142 2.558-5.69 5.69-5.69s5.69 2.548 5.69 5.69zM12 12.75c-3.142 0-5.69 2.548-5.69 5.69 0 3.142 2.558 5.69 5.69 5.69s5.69-2.548 5.69-5.69c0-3.142-2.558-5.69-5.69-5.69z" /></svg>5. Provisionamento (IaC)</h3>
-                    <p>Toda a infraestrutura na OCI (redes, subnets, VMs, Load Balancer, buckets, regras de segurança) é criada e gerenciada de forma automatizada pelo Terraform. Isso garante que o ambiente seja consistente, replicável e versionado.</p>
+                    <p>Toda a infraestrutura na OCI (VCN, Subnet, VMs, LB, NSGs) é criada e gerenciada de forma automatizada pelo <strong>Terraform</strong>. Isso garante que o ambiente seja consistente, replicável e versionado, com baixo risco de falhas de provisionamento.</p>
                 </div>
                 <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
                     <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 2.25c-2.59 0-5.04.99-6.9 2.81a14.98 14.98 0 00-2.28 14.45A14.98 14.98 0 0011.18 22.5c.97 0 1.91-.14 2.8-.42m2.61-4.71a5.962 5.962 0 00-5.84-7.38v4.8m5.84 2.58a5.962 5.962 0 01-5.84 7.38m0-12.18a5.962 5.962 0 015.84 7.38m-5.84-7.38a5.962 5.962 0 00-5.84 7.38" /></svg>6. Deploy Contínuo (CI/CD)</h3>
-                    <p>Quando um desenvolvedor envia código novo para o repositório no GitHub, um processo de CI/CD (GitHub Actions) é acionado. Ele se conecta via SSH às VMs, baixa a versão mais recente do código e executa `docker compose up` para atualizar a aplicação no ar, sem intervenção manual.</p>
+                    <p>Quando um desenvolvedor envia código novo para o GitHub, um processo de CI/CD (<strong>GitHub Actions</strong>) é acionado. Ele se conecta via SSH às VMs, baixa a versão mais recente do código e executa `docker compose up` para atualizar a aplicação no ar, sem intervenção manual.</p>
                 </div>
             </div>
         </div>
 
         <div class="section bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-lg p-8 mb-16">
             <h2 class="text-3xl font-bold text-white border-b border-gray-700 pb-4 mb-8">Considerações Arquiteturais</h2>
-            <div class="space-y-8">
+            <div class="space-y-10">
                 <div class="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
-                    <h3 class="font-semibold text-xl text-white mb-3">Estratégia de Cache (Redis)</h3>
-                    <p class="text-gray-400 mb-4">A forma como o Redis é implantado é uma decisão de arquitetura crucial que impacta a escalabilidade e a consistência. O diagrama principal mostra um serviço de cache desacoplado, que pode ser implementado de várias formas:</p>
-                    <ul class="list-disc list-inside space-y-3">
-                        <li><strong class="text-yellow-400">Opção 1 (Local em cada VM):</strong> Cada VM de aplicação tem seu próprio container Redis. <br/><span class="text-sm text-gray-400"><strong>Prós:</strong> Simples, baixa latência. <strong>Contras:</strong> Cache inconsistente entre as VMs, o que não é ideal para escalar.</span></li>
-                        <li><strong class="text-blue-400">Opção 2 (VM Dedicada):</strong> Centralizar o Redis em uma VM interna dedicada (ou na VM de Observabilidade). <br/><span class="text-sm text-gray-400"><strong>Prós:</strong> Cache consistente e compartilhado. <strong>Contras:</strong> Cria um ponto único de falha e gargalo de rede.</span></li>
-                        <li><strong class="text-green-400">Opção 3 (Serviço Gerenciado - Ideal):</strong> Utilizar um serviço PaaS como o <strong>OCI Cache with Redis</strong>. <br/><span class="text-sm text-gray-400"><strong>Prós:</strong> A melhor opção para produção. Cache consistente, alta disponibilidade, escalabilidade e gerenciamento pela OCI. <strong>Contras:</strong> Custo maior e acoplamento ao provedor.</span></li>
-                    </ul>
+                    <h3 class="font-semibold text-xl text-white mb-3">O Papel Estratégico do Load Balancer</h3>
+                    <p class="text-gray-400">Mesmo com apenas uma VM de aplicação, a inclusão do OCI Load Balancer é uma decisão estratégica. Ele serve como um <strong>ponto de entrada fixo e desacoplado</strong> para a API. Quando a demanda crescer, podemos adicionar mais VMs de aplicação (escalabilidade horizontal) e registrá-las no Load Balancer <strong>sem nenhuma alteração na arquitetura ou no DNS</strong>. É a peça chave que prepara a plataforma para um crescimento gradual e sem atritos.</p>
+                </div>
+                <div class="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+                    <h3 class="font-semibold text-xl text-white mb-3">Banco de Dados Gerenciado: O Melhor dos Dois Mundos</h3>
+                    <p class="text-gray-400">Utilizar o <strong>OCI MySQL HeatWave</strong> é uma decisão pragmática. Delegamos a complexidade de gerenciamento, backup, patching e alta disponibilidade do banco de dados para a OCI, enquanto mantemos o restante da nossa infraestrutura enxuta e de baixo custo. A comunicação entre a API e o banco ocorre em uma rede privada, garantindo segurança e baixa latência.</p>
+                </div>
+                <div class="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+                    <h3 class="font-semibold text-xl text-white mb-3">Caminho de Evolução</h3>
+                    <p class="text-gray-400">Esta arquitetura é o ponto de partida. À medida que o SaaS cresce e gera receita, a evolução pode ocorrer de forma incremental:</p>
+                     <ul class="list-decimal list-inside space-y-2 mt-4 text-gray-400">
+                        <li><strong>Escalar VMs:</strong> Aumentar o número de VMs de aplicação (`api_instance_count` no Terraform).</li>
+                        <li><strong>Escalar o Banco:</strong> Aumentar a capacidade do MySQL HeatWave com poucos cliques no console da OCI ou via Terraform.</li>
+                        <li><strong>Externalizar o Cache:</strong> Migrar o container Redis local para um serviço gerenciado como o <strong>OCI Cache with Redis</strong> para maior resiliência.</li>
+                     </ul>
                 </div>
             </div>
         </div>
@@ -185,15 +186,15 @@ graph TD
 
                 <section>
                     <h2 class="gradient-text">O Desafio</h2>
-                    <p class="text-xl text-gray-400 mb-8">Como implantar uma aplicação web moderna que seja:</p>
+                    <p class="text-xl text-gray-400 mb-8">Como construir um MVP de SaaS na nuvem que seja:</p>
                     <div class="flex flex-wrap justify-center gap-6 text-lg">
                         <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12" /></svg>
-                            <span>Escalável e Disponível</span>
+                            <span>Pronto para Crescer</span>
                         </div>
                         <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                            <span>Segura e Isolada</span>
+                            <span>Seguro e Simples</span>
                         </div>
                         <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -204,6 +205,10 @@ graph TD
                             <span>Totalmente Observável</span>
                         </div>
                         <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
+                            <span>Custo Zero (Always Free)</span>
+                        </div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5V4H4zm0 9h5v5H4v-5zm9-9h5v5h-5V4zm0 9h5v5h-5v-5z" /></svg>
                             <span>Provisionada via Código</span>
                         </div>
@@ -211,19 +216,18 @@ graph TD
                 </section>
 
                 <section>
-                    <h2 class="gradient-text">A Solução: Arquitetura em Camadas</h2>
-                    <p class="text-xl text-gray-400">Uma plataforma completa construída sobre a OCI usando ferramentas padrão de mercado.</p>
+                    <h2 class="gradient-text">A Solução: Arquitetura Pragmática</h2>
+                    <p class="text-xl text-gray-400">Uma plataforma enxuta e econômica, pronta para evoluir.</p>
                     <div class="mermaid fragment">
 graph TD
-    A["Infraestrutura como Código<br>(Terraform)"] --> B(Rede e Segurança<br>VCN, NSG, LB)
-    B --> C{VMs com Docker<br>(Compute Instances)} 
-    B --> G["Banco de Dados Gerenciado<br>(OCI PostgreSQL Service)"]
-    C --> D["Orquestração<br>(Docker Compose)"]
-    D --> E["API Gateway<br>(Traefik)"]
-    E --> F[API Node.js]
-    F --> G
-    F --> R[Cache<br>(Redis in Docker)]
-    C --> H["Observabilidade<br>(Prometheus, Grafana, Loki)"]
+    A["IaC<br>(Terraform)"] --> B(Rede Segura<br>VCN, Subnets, LB, NSG)
+    B --> C{VMs Always Free<br>(Docker)} 
+    B --> DB[(DB Gerenciado<br>MySQL HeatWave)]
+    C --> D["Stack da Aplicação<br>(Docker Compose)"]
+    D --> E["Proxy (Traefik)"] --> F[API]
+    F --> R[Cache (Redis)]
+    F --> DB
+    C --> H["Observabilidade<br>(Prometheus, Grafana)"]
                     </div>
                 </section>
 
@@ -231,9 +235,9 @@ graph TD
                     <h4>Pilar 1: Infraestrutura como Código (IaC)</h4>
                     <h2 class="gradient-text">Terraform</h2>
                     <p class="text-lg text-gray-400">Define toda a nossa nuvem em arquivos de código, permitindo criar, modificar e versionar a infraestrutura de forma segura e eficiente.</p>
-                    <div class="mt-8 grid grid-cols-3 gap-6 text-center">
+                    <div class="mt-8 grid grid-cols-3 gap-6 text-center text-base">
                         <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Consistência</strong><p class="text-sm text-gray-400">Ambientes de dev e prod idênticos.</p></div>
-                        <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Automação</strong><p class="text-sm text-gray-400">Criação de toda a stack com um comando.</p></div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Automação</strong><p class="text-sm text-gray-400">Criação da stack com um comando.</p></div>
                         <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Replicabilidade</strong><p class="text-sm text-gray-400">Sobe uma cópia exata em qualquer região.</p></div>
                     </div>
                 </section>
@@ -242,7 +246,7 @@ graph TD
                     <h4>Pilar 2: Containerização</h4>
                     <h2 class="gradient-text">Docker</h2>
                     <p class="text-lg text-gray-400">Cada parte da aplicação (API, Cache, etc) é empacotada em um "container", isolando os serviços e garantindo que funcionem da mesma forma em qualquer lugar.</p>
-                    <div class="mt-8 grid grid-cols-3 gap-6 text-center">
+                    <div class="mt-8 grid grid-cols-3 gap-6 text-center text-base">
                         <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Isolamento</strong><p class="text-sm text-gray-400">Dependências de um serviço não afetam outros.</p></div>
                         <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Portabilidade</strong><p class="text-sm text-gray-400">Roda igual no PC do dev e na nuvem.</p></div>
                         <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Leveza</strong><p class="text-sm text-gray-400">Mais eficientes que máquinas virtuais completas.</p></div>
@@ -252,22 +256,18 @@ graph TD
                 <section>
                     <h4>Pilar 3: Orquestração e Roteamento</h4>
                     <h2 class="gradient-text">Docker Compose & Traefik</h2>
-                    <p class="text-lg"><strong>Docker Compose</strong> define e executa todos os containers com um único arquivo de configuração.</p>
-                    <p class="text-lg mt-4"><strong>Traefik</strong> atua como nosso "porteiro" inteligente: descobre os serviços, gerencia o tráfego e obtém certificados SSL (HTTPS) automaticamente.</p>
+                    <p class="text-lg"><strong>Docker Compose</strong> define e executa os serviços da aplicação (API, Redis) com um único arquivo de configuração.</p>
+                    <p class="text-lg mt-4"><strong>Traefik</strong> atua como nosso "porteiro" inteligente: gerencia o tráfego de entrada e obtém certificados SSL (HTTPS) automaticamente.</p>
                 </section>
 
                 <section>
                     <h4>Pilar 4: Observabilidade Completa</h4>
-                    <h2 class="gradient-text">Prometheus, Grafana & Loki</h2>
+                    <h2 class="gradient-text">Prometheus & Grafana</h2>
                     <p class="text-lg text-gray-400">Não basta a aplicação funcionar, precisamos saber <i>como</i> ela está funcionando.</p>
-                    <div class="mt-8 grid grid-cols-3 gap-6 text-center text-base">
+                    <div class="mt-8 grid grid-cols-2 gap-6 text-center text-base">
                         <div class="fragment bg-gray-800 p-4 rounded-lg flex flex-col items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             <strong>Prometheus</strong><p class="text-sm text-gray-400">Coleta métricas de performance (CPU, RAM, etc).</p>
-                        </div>
-                        <div class="fragment bg-gray-800 p-4 rounded-lg flex flex-col items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" /></svg>
-                            <strong>Loki</strong><p class="text-sm text-gray-400">Agrega todos os logs dos containers em um só lugar.</p>
                         </div>
                         <div class="fragment bg-gray-800 p-4 rounded-lg flex flex-col items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
@@ -293,7 +293,7 @@ graph TD
 
                 <section>
                     <h2 class="gradient-text">Conclusão</h2>
-                    <p>A plataforma OCI SaaS demonstra uma arquitetura robusta, escalável e alinhada com as melhores práticas de DevOps e engenharia de software, pronta para suportar aplicações de missão crítica.</p>
+                    <p>Esta plataforma demonstra uma arquitetura <strong>pragmática, econômica e sustentável</strong>. Ela oferece uma base sólida e simples para um MVP, com um caminho claro para crescimento gradual e escalabilidade, alinhada com as melhores práticas de DevOps.</p>
                     <br>
                     <h3>Obrigado!</h3>
                 </section>

@@ -8,19 +8,9 @@ output "app_nsg_id" {
   value       = oci_core_network_security_group.app_nsg.id
 }
 
-output "private_subnet_id" {
-  description = "The OCID of the private subnet."
-  value       = oci_core_subnet.private.id
-}
-
-output "db_nsg_id" {
-  description = "The OCID of the database Network Security Group."
-  value       = oci_core_network_security_group.db_nsg.id
-}
-
-output "private_subnet_dns_label" {
-  description = "The DNS label of the private subnet."
-  value       = oci_core_subnet.private.dns_label
+output "obs_nsg_id" {
+  description = "The OCID of the Network Security Group for the Observability VM."
+  value       = oci_core_network_security_group.obs_nsg.id
 }
 
 output "vcn_dns_label" {

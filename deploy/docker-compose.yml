@@ -1,11 +1,15 @@
 version: "3.9"
 
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  postgres_data:
+  traefik_letsencrypt:
+
 services:
-
-  # ==================================================
-  # REVERSE PROXY / API GATEWAY
-  # ==================================================
-
   traefik:
     image: traefik:v3.0
     restart: always
@@ -13,84 +17,65 @@ services:
       - --api.dashboard=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
-
-      # HTTP/HTTPS
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-
-      # Let's Encrypt
       - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
       - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-
-      # Metrics
       - --metrics.prometheus=true
-
     ports:
       - "80:80"
       - "443:443"
-
+      - "8080:8080" # Dashboard do Traefik (opcional, pode ser protegido)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik:/letsencrypt
-
+      - traefik_letsencrypt:/letsencrypt
     networks:
-      - frontend
-      - backend
-
-  # ==================================================
-  # BACKEND API
-  # ==================================================
+      - app-network
 
   api:
     build:
       context: ../backend
       dockerfile: Dockerfile
-
     restart: always
-
-    deploy:
-      replicas: 3
-
     environment:
       NODE_ENV: production
-
-      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_DATABASE}
-
-      REDIS_URL: redis://redis:6379
-
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-
-      S3_ENDPOINT: http://minio:9000
-      S3_ACCESS_KEY: ${MINIO_ROOT_USER}
-      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+    depends_on:
+      - redis
+      - postgres
     labels:
-      - traefik.enable=true
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`${API_DOMAIN}`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api.loadbalancer.server.port=3003"
+    networks: [ "app-network" ]
 
-      - traefik.http.routers.api.rule=Host(`api.seudominio.com`)
-      - traefik.http.routers.api.entrypoints=websecure
-      - traefik.http.routers.api.tls.certresolver=letsencrypt
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks: [ "app-network" ]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-      - traefik.http.services.api.loadbalancer.server.port=3003
-
-    networks:
-      - backend
-      - frontend
-
-# ==================================================
-# NETWORKS
-# ==================================================
-
-networks:
-  frontend:
-    driver: bridge
-
-  backend:
-    driver: bridge
-
-# ==================================================
-# VOLUMES
-# ==================================================
-volumes: {}
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      # These variables are read from the .env file created by the deploy script
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [ "app-network" ]

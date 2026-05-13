@@ -2,7 +2,7 @@ terraform {
   required_providers {
     oci = {
       source  = "oracle/oci"
-      version = ">= 5.0"
+      version = "5.30.0" # Pin to a specific recent version to force a clean download
     }
     random = {
       source  = "hashicorp/random"
@@ -34,7 +34,6 @@ module "network" {
   compartment_id  = var.compartment_ocid
   project_prefix  = var.project_prefix
   vcn_cidr        = "10.0.0.0/16"
-  private_subnet_cidr = var.private_subnet_cidr
   subnet_cidr     = "10.0.1.0/24"
   tags            = var.tags
   ssh_source_cidr = var.ssh_source_cidr
@@ -45,8 +44,8 @@ module "compute_api" {
   source              = "../../modules/compute"
   tenancy_ocid        = var.tenancy_ocid # Adicionado para a busca de imagens
   compartment_id      = var.compartment_ocid
-  # Distribui as VMs entre os ADs. Se instance_count > número de ADs, ele repetirá.
-  availability_domain = data.oci_identity_availability_domains.ads.availability_domains[count.index % length(data.oci_identity_availability_domains.ads.availability_domains)].name
+  # Tenta o AD especificado e distribui as instâncias seguintes pelos outros ADs.
+  availability_domain = data.oci_identity_availability_domains.ads.availability_domains[(var.availability_domain_index + count.index) % length(data.oci_identity_availability_domains.ads.availability_domains)].name
   instance_shape      = var.instance_shape
   project_prefix      = "${var.project_prefix}-api-${count.index + 1}" # Nomeia as VMs como saas-platform-api-1
   ssh_public_key      = var.ssh_public_key
@@ -95,8 +94,8 @@ resource "oci_objectstorage_object" "frontend_index" {
   namespace    = data.oci_objectstorage_namespace.ns.namespace
   object       = "index.html"
   content_type = "text/html"
-  content      = templatefile("../../../frontend/index.html", { api_endpoint = var.api_domain }) # Certifique-se que seu DNS para api_domain aponte para o IP público do LB
-  depends_on   = [oci_load_balancer_load_balancer.app_lb]
+  # O api_domain deve ser apontado para o IP público do Load Balancer
+  content      = templatefile("../../../frontend/index.html", { api_endpoint = var.api_domain })
 }
 
 # --- Storage: InsumoPro (Acessível pela VM) ---
@@ -147,45 +146,6 @@ resource "oci_load_balancer_load_balancer" "app_lb" {
   freeform_tags = var.tags
 }
 
-# --- OCI PostgreSQL Database Always Free ---
-resource "oci_database_db_system" "pg_db_system" {
-  compartment_id        = var.compartment_ocid
-  availability_domain   = data.oci_identity_availability_domains.ads.availability_domains[var.availability_domain_index].name
-  display_name          = "${var.project_prefix}-pg-db"
-  database_edition      = "STANDARD_EDITION" # Always Free uses Standard Edition
-  db_system_options {
-    storage_management = "LVM"
-  }
-  db_home {
-    db_version = "14.9"
-    database {
-      admin_password = var.db_admin_password
-      db_name        = var.db_name
-      db_workload    = "OLTP"
-    }
-  }
-  hostname              = "${var.project_prefix}-pgdb"
-  shape                 = "VM.Standard.E2.1.Micro" # Always Free shape
-  subnet_id             = module.network.private_subnet_id
-  ssh_public_keys       = [var.ssh_public_key]
-  disk_redundancy       = "NONE" # Always Free might not support HA
-  cpu_core_count        = 1
-  data_storage_size_in_gb = 46 # Always Free storage for Micro shape
-  node_count            = 1
-  source                = "NONE"
-  freeform_tags         = var.tags
-  # Ensure the DB NSG is associated with the DB System's VNIC
-  nsg_ids               = [module.network.db_nsg_id]
-
-  # Lifecycle rule to prevent accidental deletion of the database
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
-
-
-
 # Backend Set para tráfego HTTP na porta 80
 resource "oci_load_balancer_backend_set" "http_bs" {
   name             = "${var.project_prefix}-http-bs"
@@ -196,7 +156,7 @@ resource "oci_load_balancer_backend_set" "http_bs" {
     protocol    = "HTTP"
     port        = 80
     url_path    = "/health" # Endpoint de healthcheck do Traefik
-    retries     = 3
+    retries     = 2
     timeout_in_millis = 1000
     # interval_in_millis = 2000 # Temporariamente comentado para contornar o erro do provedor
   }
@@ -211,7 +171,7 @@ resource "oci_load_balancer_backend_set" "https_bs" {
   health_checker {
     protocol = "TCP" # Para HTTPS, um healthcheck TCP na porta é suficiente
     port     = 443
-    retries  = 3
+    retries  = 2
     timeout_in_millis = 1000
     # interval_in_millis = 2000 # Temporariamente comentado para contornar o erro do provedor
   }

@@ -128,11 +128,7 @@ main() {
   # --- Configurações do Ciclo de Tentativas ---
   # Array de configurações de VM a tentar, em ordem. Formato: "OCPUs:MemoriaEmGB:Shape"
   local -a configurations
-  configurations=(
-  #  "4:24:VM.Standard.A1.Flex"
-  #  "3:18:VM.Standard.A1.Flex"
-  #  "2:12:VM.Standard.A1.Flex"
-  #  "1:6:VM.Standard.A1.Flex"
+  configurations=( # Apenas a configuração Always Free para máxima compatibilidade
     "1:1:VM.Standard.E2.1.Micro"
   )
   # Array de Availability Domains (índices) a tentar.

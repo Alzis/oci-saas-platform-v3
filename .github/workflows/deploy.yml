@@ -16,10 +16,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./backend
-        run: npm install
+        run: npm ci
 
       # Adicione aqui passos de lint e teste
       # - name: Lint code
@@ -32,32 +34,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to VM via SSH
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.OCI_VM_HOST }}
           username: ${{ secrets.OCI_VM_USER }}
           key: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
-          env:
-            # Passa os secrets do GitHub para o script
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
-            REDIS_URL: ${{ secrets.REDIS_URL }}
           script: |
             set -e
-            APP_DIR="/opt/saas-platform"
-            REPO_URL="https://github.com/Alzis/oci-saas-platform-v2.git" # <-- MUDE PARA SEU REPO
-            
-            # Clona o repositório se não existir, senão atualiza
-            if [ ! -d "$APP_DIR/.git" ]; then
-              git clone $REPO_URL $APP_DIR
-            fi
-            cd $APP_DIR
-            git pull origin main
+            echo "--- Starting deployment to ${{ secrets.OCI_VM_HOST }} ---"
 
-            # Cria o arquivo .env com os secrets (agora incluindo DATABASE_URL)
-            echo "Creating .env file with database connection string..."
-            echo "DATABASE_URL=${DATABASE_URL}" > deploy/.env
-            echo "REDIS_URL=${REDIS_URL}" >> deploy/.env
-            echo "Done."
-            
+            APP_DIR="/opt/saas-platform"
+            # Use a variável de ambiente do GitHub para obter a URL do repositório dinamicamente
+            REPO_URL="https://github.com/${{ github.repository }}.git"
+
+            # Clona o repositório se não existir, ou atualiza se já existir
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "Cloning repository..."
+              git clone "$REPO_URL" "$APP_DIR"
+            else
+              echo "Repository exists. Fetching latest changes..."
+            fi
+
+            cd $APP_DIR
+            echo "Fetching and resetting to the latest version of the main branch..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Cria o arquivo .env usando um heredoc para maior clareza e robustez
+            echo "Creating .env file..."
+            cat > deploy/.env << EOF
+# For the backend service
+DATABASE_URL=postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
+API_DOMAIN=${{ secrets.API_DOMAIN }}
+TRAEFIK_ACME_EMAIL=${{ secrets.TRAEFIK_ACME_EMAIL }}
+REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+# For the postgres service
+POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+EOF
+            echo ".env file created."
+
             # Inicia/Atualiza todos os serviços
-            docker compose -f deploy/docker-compose.yml up -d --build --force-recreate
+            cd deploy
+            echo "Pulling latest base images..."
+            docker compose pull
+            echo "Starting services with Docker Compose..."
+            docker compose up -d --build --force-recreate
+
+            echo "--- Deployment finished successfully ---"
