@@ -66,8 +66,12 @@ usermod -aG docker ubuntu
 # 3. Install Docker Compose v2
 echo "--- Installing Docker Compose ---"
 DOCKER_COMPOSE_VERSION="v2.24.6" # Use a specific version for stability. The $$ below escapes the variable for the terraform templatefile function.
+# Re-apply public DNS fix. The network stack can sometimes be reset after installing packages like Docker.
+echo "--- Re-applying public DNS before curl ---"
+echo "nameserver 8.8.8.8" | tee /etc/resolv.conf > /dev/null
+
 mkdir -p /usr/local/lib/docker/cli-plugins
-curl -SL "https://github.com/docker/compose/releases/download/$${DOCKER_COMPOSE_VERSION}/docker-compose-linux-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose
+curl -SL --retry 3 --retry-delay 5 "https://github.com/docker/compose/releases/download/$${DOCKER_COMPOSE_VERSION}/docker-compose-linux-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose
 chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
 # Verify installations
