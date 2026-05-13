@@ -1,0 +1,1600 @@
+[2026-05-12 18:24:53] Iniciando o script de retry do Terraform...
+[2026-05-12 18:24:53] Os logs serão salvos em: terraform-retry.log
+[2026-05-12 18:24:54] Pressione CTRL+C a qualquer momento para interromper.
+[2026-05-12 18:24:54] Validando pré-requisitos...
+[2026-05-12 18:24:54] Pré-requisitos validados com sucesso.
+[2026-05-12 18:24:54] Iniciando ciclo de tentativas com as seguintes configurações (de maior para menor):
+[2026-05-12 18:24:54]  - VM: 1:1:VM.Standard.E2.1.Micro
+[2026-05-12 18:24:54] Availability Domains (Índices): 0, 1, 2
+[2026-05-12 18:24:54] --- Tentativa #1 (AD: 0, Config: 1 OCPU, 1GB RAM, Shape: VM.Standard.E2.1.Micro) ---
+data.oci_identity_availability_domains.ads: Reading...
+module.compute.data.oci_core_images.ubuntu: Reading...
+data.oci_objectstorage_namespace.ns: Reading...
+module.network.oci_core_vcn.main: Refreshing state... [id=ocid1.vcn.oc1.iad.amaaaaaa7xsqx3aaso7q5wmsjrtvmke3yrjwlawsgagdepbal43jvwv6i2tq]
+data.oci_identity_availability_domains.ads: Read complete after 1s [id=IdentityAvailabilityDomainsDataSource-2766122801]
+module.compute.data.oci_core_images.ubuntu: Read complete after 1s [id=CoreImagesDataSource-3929395061]
+module.network.oci_core_internet_gateway.gw: Refreshing state... [id=ocid1.internetgateway.oc1.iad.aaaaaaaaoflkhgsdzu2cpkemaaxoju7nhhxjkx2qbkgzotsywweqbzoj57oq]
+module.network.oci_core_network_security_group.app_nsg: Refreshing state... [id=ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq]
+data.oci_objectstorage_namespace.ns: Read complete after 1s [id=ObjectStorageNamespaceDataSource-2766122801]
+module.network.oci_core_route_table.main: Refreshing state... [id=ocid1.routetable.oc1.iad.aaaaaaaanzutbgxp377zpbbmzwmgmtg6cen2fbqydhpouekqmivbv5zb7tsq]
+module.network.oci_core_subnet.public: Refreshing state... [id=ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # oci_identity_dynamic_group.backend_dg will be created
+  + resource "oci_identity_dynamic_group" "backend_dg" {
+      + compartment_id = "ocid1.tenancy.oc1..aaaaaaaaxi6ah7g2j4vozp7dpp3zavhpb65e4xquysu2zxm67gvododkutjq"
+      + defined_tags   = (known after apply)
+      + description    = "Grupo para a VM acessar o Object Storage"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + matching_rule  = "ALL {instance.compartment.id = 'ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla', tag.Project.value = 'SaaS-Platform'}"
+      + name           = "saas-platform-backend-dg"
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+    }
+
+  # oci_identity_policy.backend_storage_policy will be created
+  + resource "oci_identity_policy" "backend_storage_policy" {
+      + ETag           = (known after apply)
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + defined_tags   = (known after apply)
+      + description    = "Permite a VM gerenciar objetos no bucket insumopro"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + lastUpdateETag = (known after apply)
+      + name           = "saas-platform-storage-policy"
+      + policyHash     = (known after apply)
+      + state          = (known after apply)
+      + statements     = [
+          + "Allow dynamic-group saas-platform-backend-dg to manage objects in compartment id ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla where target.bucket.name='saas-platform-insumopro'",
+        ]
+      + time_created   = (known after apply)
+      + version_date   = (known after apply)
+    }
+
+  # oci_objectstorage_bucket.frontend_bucket will be created
+  + resource "oci_objectstorage_bucket" "frontend_bucket" {
+      + access_type                  = "ObjectReadWithoutList"
+      + approximate_count            = (known after apply)
+      + approximate_size             = (known after apply)
+      + auto_tiering                 = (known after apply)
+      + bucket_id                    = (known after apply)
+      + bucket_scope                 = (known after apply)
+      + compartment_id               = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + created_by                   = (known after apply)
+      + defined_tags                 = (known after apply)
+      + etag                         = (known after apply)
+      + freeform_tags                = {
+          + "ManagedBy" = "Terraform"
+          + "Project"   = "SaaS-Platform"
+        }
+      + id                           = (known after apply)
+      + is_read_only                 = (known after apply)
+      + kms_key_id                   = (known after apply)
+      + name                         = "saas-platform-frontend-bucket"
+      + namespace                    = "iddg6xbyg1cs"
+      + object_events_enabled        = (known after apply)
+      + object_lifecycle_policy_etag = (known after apply)
+      + replication_enabled          = (known after apply)
+      + storage_tier                 = (known after apply)
+      + time_created                 = (known after apply)
+      + versioning                   = (known after apply)
+    }
+
+  # oci_objectstorage_bucket.insumopro_bucket will be created
+  + resource "oci_objectstorage_bucket" "insumopro_bucket" {
+      + access_type                  = "NoPublicAccess"
+      + approximate_count            = (known after apply)
+      + approximate_size             = (known after apply)
+      + auto_tiering                 = (known after apply)
+      + bucket_id                    = (known after apply)
+      + bucket_scope                 = (known after apply)
+      + compartment_id               = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + created_by                   = (known after apply)
+      + defined_tags                 = (known after apply)
+      + etag                         = (known after apply)
+      + freeform_tags                = {
+          + "ManagedBy" = "Terraform"
+          + "Project"   = "SaaS-Platform"
+        }
+      + id                           = (known after apply)
+      + is_read_only                 = (known after apply)
+      + kms_key_id                   = (known after apply)
+      + name                         = "saas-platform-insumopro"
+      + namespace                    = "iddg6xbyg1cs"
+      + object_events_enabled        = (known after apply)
+      + object_lifecycle_policy_etag = (known after apply)
+      + replication_enabled          = (known after apply)
+      + storage_tier                 = (known after apply)
+      + time_created                 = (known after apply)
+      + versioning                   = (known after apply)
+    }
+
+  # oci_objectstorage_object.frontend_index will be created
+  + resource "oci_objectstorage_object" "frontend_index" {
+      + bucket                     = "saas-platform-frontend-bucket"
+      + content                    = (known after apply)
+      + content_length             = (known after apply)
+      + content_md5                = (known after apply)
+      + content_type               = "text/html"
+      + delete_all_object_versions = false
+      + id                         = (known after apply)
+      + namespace                  = "iddg6xbyg1cs"
+      + object                     = "index.html"
+      + opc_sse_kms_key_id         = (known after apply)
+      + state                      = (known after apply)
+      + storage_tier               = (known after apply)
+      + version_id                 = (known after apply)
+      + work_request_id            = (known after apply)
+    }
+
+  # module.compute.oci_core_instance.app_vm will be created
+  + resource "oci_core_instance" "app_vm" {
+      + availability_domain                 = "nOoe:US-ASHBURN-AD-1"
+      + boot_volume_id                      = (known after apply)
+      + capacity_reservation_id             = (known after apply)
+      + compartment_id                      = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + compute_cluster_id                  = (known after apply)
+      + dedicated_vm_host_id                = (known after apply)
+      + defined_tags                        = (known after apply)
+      + display_name                        = "saas-platform-vm"
+      + extended_metadata                   = (known after apply)
+      + fault_domain                        = (known after apply)
+      + freeform_tags                       = {
+          + "ManagedBy" = "Terraform"
+          + "Project"   = "SaaS-Platform"
+        }
+      + hostname_label                      = (known after apply)
+      + id                                  = (known after apply)
+      + image                               = (known after apply)
+      + instance_configuration_id           = (known after apply)
+      + ipxe_script                         = (known after apply)
+      + is_ai_enterprise_enabled            = (known after apply)
+      + is_cross_numa_node                  = (known after apply)
+      + is_pv_encryption_in_transit_enabled = (known after apply)
+      + launch_mode                         = (known after apply)
+      + metadata                            = {
+          + "ssh_authorized_keys" = (sensitive value)
+          + "user_data"           = "IyEvYmluL2Jhc2gKc2V0IC1lCgojIDEuIEV2aXRhIHF1ZSBvIFVidW50dSBhYnJhIGphbmVsYXMgaW50ZXJhdGl2YXMgZHVyYW50ZSBvIGFwdCB1cGdyYWRlCmV4cG9ydCBERUJJQU5fRlJPTlRFTkQ9bm9uaW50ZXJhY3RpdmUKCiMgTG9nIGV2ZXJ5dGhpbmcgdG8gYSBmaWxlCmV4ZWMgPiA+KHRlZSAvdmFyL2xvZy9jbG91ZC1pbml0LW91dHB1dC5sb2d8bG9nZ2VyIC10IHVzZXItZGF0YSAtcyAyPi9kZXYvY29uc29sZSkgMj4mMQoKZWNobyAiLS0tIFN0YXJ0aW5nIENsb3VkLUluaXQgU2NyaXB0IC0tLSIKCmVjaG8gIi0tLSBGb3JjaW5nIGFwdCB0byB1c2UgSVB2NCAtLS0iCmVjaG8gJ0FjcXVpcmU6OkZvcmNlSVB2NCAidHJ1ZSI7JyB8IHRlZSAvZXRjL2FwdC9hcHQuY29uZi5kLzk5Zm9yY2UtaXB2NAoKIyBNYW51YWxseSBzZXQgYSBwdWJsaWMgRE5TIHNlcnZlciBhcyBhIGZhbGxiYWNrIGZvciB0aGlzIHNjcmlwdCdzIHNlc3Npb24uCiMgVGhpcyBpcyBhIHBvd2VyZnVsIGRlYnVnZ2luZyBzdGVwIHRvIGJ5cGFzcyBwb3RlbnRpYWwgVkNOIEROUyBpc3N1ZXMuCmVjaG8gIi0tLSBUZW1wb3JhcmlseSBzZXR0aW5nIHB1YmxpYyBETlMgLS0tIgplY2hvICJuYW1lc2VydmVyIDguOC44LjgiIHwgdGVlIC9ldGMvcmVzb2x2LmNvbmYgPiAvZGV2L251bGwKCiMgV2FpdCBmb3IgbmV0d29yayBhbmQgRE5TIHRvIGJlIHJlYWR5LiBUaGlzIHByZXZlbnRzIGZhaWx1cmVzIG9uIGluaXRpYWwgYm9vdC4KZWNobyAiLS0tIFdhaXRpbmcgZm9yIG5ldHdvcmsgYW5kIEROUyByZXNvbHV0aW9uIC0tLSIKdW50aWwgcGluZyAtYyAxIGdvb2dsZS5jb20gJj4vZGV2L251bGw7IGRvCiAgICBlY2hvICJOZXR3b3JrIG5vdCByZWFkeSwgd2FpdGluZyA1IHNlY29uZHMuLi4iCiAgICBzbGVlcCA1CmRvbmUKZWNobyAiLS0tIE5ldHdvcmsgYW5kIEROUyBhcmUgdXAgLS0tIgoKIyAyLiBVcGRhdGUgZSBVcGdyYWRlIGNvbSBmbGFncyBxdWUgZm9yw6dhbSBvIHVzbyBkYXMgY29uZmlndXJhw6fDtWVzIGF0dWFpcyAoc2VtIHRyYXZhcikKYXB0LWdldCB1cGRhdGUKYXB0LWdldCB1cGdyYWRlIC15IC1vIERwa2c6Ok9wdGlvbnM6Oj0iLS1mb3JjZS1jb25mb2xkIgoKIyAzLiBJbnN0YWxhw6fDo28gZGUgZmVycmFtZW50YXMgYsOhc2ljYXMKYXB0LWdldCBpbnN0YWxsIC15IGFwdC10cmFuc3BvcnQtaHR0cHMgY2EtY2VydGlmaWNhdGVzIGN1cmwgc29mdHdhcmUtcHJvcGVydGllcy1jb21tb24gZ2l0CgoKIyAtLS0gQ3JlYXRlIGFuZCBlbmFibGUgYSAyR0Igc3dhcCBmaWxlIC0tLQplY2hvICJDcmVhdGluZyAyR0Igc3dhcCBmaWxlLi4uIgpmYWxsb2NhdGUgLWwgMkcgL3N3YXBmaWxlCmNobW9kIDYwMCAvc3dhcGZpbGUKbWtzd2FwIC9zd2FwZmlsZQpzd2Fwb24gL3N3YXBmaWxlCiMgTWFrZSB0aGUgc3dhcCBmaWxlIHBlcm1hbmVudAplY2hvICcvc3dhcGZpbGUgbm9uZSBzd2FwIHN3IDAgMCcgfCB0ZWUgLWEgL2V0Yy9mc3RhYgplY2hvICJTd2FwIGZpbGUgY3JlYXRlZCBhbmQgZW5hYmxlZC4iCgojIC0tLSBSZXN0YW50ZSBkbyBzZXUgc2NyaXB0IGRlIERvY2tlciAtLS0KZWNobyAiLS0tIFJ1bm5pbmcgbmV0d29yayBkaWFnbm9zdGljcyBiZWZvcmUgRG9ja2VyIGluc3RhbGwgLS0tIgplY2hvICItLS0gVGVzdGluZyBjb25uZWN0aW9uIHRvIGRvd25sb2FkLmRvY2tlci5jb206NDQzIHdpdGggdmVyYm9zZSBvdXRwdXQgLS0tIgpjdXJsIC12IGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbQplY2hvICItLS0gRGlhZ25vc3RpY3MgZmluaXNoZWQuIFRoZSBjb21tYW5kIGFib3ZlIHNob3VsZCBzaG93IHRoZSBjb25uZWN0aW9uIGF0dGVtcHQuIC0tLSIKCmVjaG8gIi0tLSBJbnN0YWxsaW5nIERvY2tlciAtLS0iCiMgVXNlIC9ldGMvYXB0L2tleXJpbmdzIChwYWRyw6NvIG1vZGVybm8gZG8gRG9ja2VyKSBwYXJhIGV2aXRhciBhdmlzb3MgZGUgc2VndXJhbsOnYQpta2RpciAtcCAvZXRjL2FwdC9rZXlyaW5ncwpjdXJsIC1mc1NMIGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbS9saW51eC91YnVudHUvZ3BnIHwgZ3BnIC0tZGVhcm1vciAtbyAvZXRjL2FwdC9rZXlyaW5ncy9kb2NrZXItYXJjaGl2ZS1rZXlyaW5nLmdwZwoKZWNobyAiZGViIFthcmNoPSQoZHBrZyAtLXByaW50LWFyY2hpdGVjdHVyZSkgc2lnbmVkLWJ5PS9ldGMvYXB0L2tleXJpbmdzL2RvY2tlci1hcmNoaXZlLWtleXJpbmcuZ3BnXSBodHRwczovL2Rvd25sb2FkLmRvY2tlci5jb20vbGludXgvdWJ1bnR1ICQobHNiX3JlbGVhc2UgLWNzKSBzdGFibGUiIHwgdGVlIC9ldGMvYXB0L3NvdXJjZXMubGlzdC5kL2RvY2tlci5saXN0ID4gL2Rldi9udWxsCgphcHQtZ2V0IHVwZGF0ZQphcHQtZ2V0IGluc3RhbGwgLXkgZG9ja2VyLWNlIGRvY2tlci1jZS1jbGkgY29udGFpbmVyZC5pbwoKIyBBZGQgdWJ1bnR1IHVzZXIgdG8gZG9ja2VyIGdyb3VwCnVzZXJtb2QgLWFHIGRvY2tlciB1YnVudHUKCgojIDMuIEluc3RhbGwgRG9ja2VyIENvbXBvc2UgdjIKZWNobyAiLS0tIEluc3RhbGxpbmcgRG9ja2VyIENvbXBvc2UgLS0tIgpET0NLRVJfQ09NUE9TRV9WRVJTSU9OPSJ2Mi4yNC42IiAjIFVzZSBhIHNwZWNpZmljIHZlcnNpb24gZm9yIHN0YWJpbGl0eQpta2RpciAtcCAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMKY3VybCAtU0wgImh0dHBzOi8vZ2l0aHViLmNvbS9kb2NrZXIvY29tcG9zZS9yZWxlYXNlcy9kb3dubG9hZC8ke0RPQ0tFUl9DT01QT1NFX1ZFUlNJT059L2RvY2tlci1jb21wb3NlLWxpbnV4LSQodW5hbWUgLW0pIiAtbyAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMvZG9ja2VyLWNvbXBvc2UKY2htb2QgK3ggL3Vzci9sb2NhbC9saWIvZG9ja2VyL2NsaS1wbHVnaW5zL2RvY2tlci1jb21wb3NlCgojIFZlcmlmeSBpbnN0YWxsYXRpb25zCmRvY2tlciAtLXZlcnNpb24KZG9ja2VyIGNvbXBvc2UgdmVyc2lvbgoKIyA0LiBTZXR1cCBBcHBsaWNhdGlvbiBEaXJlY3RvcnkKZWNobyAiLS0tIFNldHRpbmcgdXAgYXBwbGljYXRpb24gZGlyZWN0b3J5IC0tLSIKQVBQX0RJUj0iL29wdC9zYWFzLXBsYXRmb3JtIgpSRVBPX1VSTD0iaHR0cHM6Ly9naXRodWIuY29tL0FsemlzL29jaS1zYWFzLXBsYXRmb3JtLXYyLmdpdCIgIyA8LS0gQ0hBTkdFIFRISVMKCm1rZGlyIC1wICR7QVBQX0RJUn0KY2hvd24gLVIgdWJ1bnR1OnVidW50dSAke0FQUF9ESVJ9CgojIFdlIHdpbGwgY2xvbmUgdGhlIHJlcG8gYXMgdGhlICd1YnVudHUnIHVzZXIgZHVyaW5nIHRoZSBmaXJzdCBkZXBsb3kKIyBGb3Igbm93LCB0aGUgZGlyZWN0b3J5IGlzIHJlYWR5LgoKIyA1LiBFbmFibGUgRG9ja2VyIHRvIHN0YXJ0IG9uIGJvb3QKc3lzdGVtY3RsIGVuYWJsZSBkb2NrZXIKCiMgQ2xvbmUgdGhlIHJlcG9zaXRvcnkgYXMgdGhlICd1YnVudHUnIHVzZXIKc3VkbyAtdSB1YnVudHUgZ2l0IGNsb25lICR7R0lUX1JFUE9fVVJMfSAke0FQUF9ESVJ9CgppZiBbIC1kICIke0FQUF9ESVJ9L2RlcGxveSIgXTsgdGhlbgogIGVjaG8gIlJlcG9zaXRvcnkgY2xvbmVkLiBTdGFydGluZyBzZXJ2aWNlcy4uLiIKICAjIFVzZSB0aGUgZG9ja2VyIGNvbXBvc2UgcGx1Z2luLCBydW4gYXMgJ3VidW50dScgdXNlcgogICMgUnVuIGFzIHJvb3QgdG8gZW5zdXJlIHBlcm1pc3Npb25zIGFyZSBub3QgYW4gaXNzdWUgZHVyaW5nIGluaXRpYWwgc2V0dXAuCiAgIyBUaGUgJ3VidW50dScgdXNlciBjYW4gbWFuYWdlIGRvY2tlciBsYXRlciB0aGFua3MgdG8gdGhlICd1c2VybW9kJyBjb21tYW5kIGFib3ZlLgogICNkb2NrZXIgY29tcG9zZSAtZiAke0FQUF9ESVJ9L2RlcGxveS9kb2NrZXItY29tcG9zZS55bWwgdXAgLWQKICBlY2hvICJEb2NrZXIgQ29tcG9zZSBzZXJ2aWNlcyBzdGFydGVkLiIKZWxzZQogIGVjaG8gIkZhaWxlZCB0byBjbG9uZSByZXBvc2l0b3J5IG9yIGRvY2tlci1jb21wb3NlLnltbCBub3QgZm91bmQuIgpmaQoKZWNobyAiLS0tIENsb3VkLUluaXQgU2NyaXB0IEZpbmlzaGVkIFN1Y2Nlc3NmdWxseSAtLS0iCgojIFRoZSBkZXBsb3ltZW50IGl0c2VsZiAoY2xvbmluZyB0aGUgcmVwbyBhbmQgcnVubmluZyBkb2NrZXIgY29tcG9zZSkKIyB3aWxsIGJlIGhhbmRsZWQgYnkgdGhlIEdpdEh1YiBBY3Rpb25zIHBpcGVsaW5lLgoKIyAtLS0gNi4gSGVhbHRoY2hlY2sgLS0tCmVjaG8gIi0tLSBSdW5uaW5nIEhlYWx0aGNoZWNrIC0tLSIKCiMgVmVyaWZpY2Egc2UgbyBEb2NrZXIgZXN0w6EgcmVzcG9uZGVuZG8KaWYgZG9ja2VyIHBzID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXI6IE9LIgplbHNlCiAgICBlY2hvICLinYwgRG9ja2VyOiBGQUlMRUQiCiAgICBleGl0IDEKZmkKCiMgVmVyaWZpY2Egc2UgbyBDb21wb3NlIGVzdMOhIGluc3RhbGFkbwppZiBkb2NrZXIgY29tcG9zZSB2ZXJzaW9uID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXIgQ29tcG9zZTogT0siCmVsc2UKICAgIGVjaG8gIuKdjCBEb2NrZXIgQ29tcG9zZTogRkFJTEVEIgogICAgZXhpdCAxCmZpCgojIENyaWEgdW0gbWFyY2Fkb3IgZGUgc3VjZXNzbyBwYXJhIG8gc2V1IHBpcGVsaW5lIHNhYmVyIHF1ZSBhY2Fib3UKdG91Y2ggL3Zhci9sb2cvY2xvdWQtaW5pdC1kb25lCgplY2hvICItLS0gQ2xvdWQtSW5pdCBTY3JpcHQgRmluaXNoZWQgU3VjY2Vzc2Z1bGx5IGF0ICQoZGF0ZSkgLS0tIg=="
+        }
+      + private_ip                          = (known after apply)
+      + public_ip                           = (known after apply)
+      + region                              = (known after apply)
+      + security_attributes                 = (known after apply)
+      + security_attributes_state           = (known after apply)
+      + shape                               = "VM.Standard.E2.1.Micro"
+      + state                               = (known after apply)
+      + subnet_id                           = (known after apply)
+      + system_tags                         = (known after apply)
+      + time_created                        = (known after apply)
+      + time_maintenance_reboot_due         = (known after apply)
+
+      + agent_config (known after apply)
+
+      + availability_config (known after apply)
+
+      + create_vnic_details {
+          + assign_ipv6ip          = (known after apply)
+          + assign_public_ip       = "true"
+          + defined_tags           = (known after apply)
+          + display_name           = (known after apply)
+          + freeform_tags          = (known after apply)
+          + hostname_label         = (known after apply)
+          + nsg_ids                = [
+              + "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq",
+            ]
+          + private_ip             = (known after apply)
+          + private_ip_id          = (known after apply)
+          + security_attributes    = (known after apply)
+          + skip_source_dest_check = (known after apply)
+          + subnet_cidr            = (known after apply)
+          + subnet_id              = "ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq"
+          + vlan_id                = (known after apply)
+
+          + ipv6address_ipv6subnet_cidr_pair_details (known after apply)
+        }
+
+      + instance_options (known after apply)
+
+      + launch_options (known after apply)
+
+      + launch_volume_attachments (known after apply)
+
+      + licensing_configs (known after apply)
+
+      + placement_constraint_details (known after apply)
+
+      + platform_config (known after apply)
+
+      + preemptible_instance_config (known after apply)
+
+      + shape_config (known after apply)
+
+      + source_details {
+          + boot_volume_size_in_gbs = (known after apply)
+          + boot_volume_vpus_per_gb = (known after apply)
+          + source_id               = "ocid1.image.oc1.iad.aaaaaaaaxuoxbmbtrnnkm6n5zcjyu4ac6ocmdcxpdxr6s7ndrcfhroc5maiq"
+          + source_type             = "image"
+
+          + instance_source_image_filter_details (known after apply)
+        }
+    }
+
+  # module.network.oci_core_network_security_group_security_rule.allow_all_egress will be created
+  + resource "oci_core_network_security_group_security_rule" "allow_all_egress" {
+      + description               = "Allow all outbound traffic"
+      + destination               = "0.0.0.0/0"
+      + destination_type          = "CIDR_BLOCK"
+      + direction                 = "EGRESS"
+      + id                        = (known after apply)
+      + is_valid                  = (known after apply)
+      + network_security_group_id = "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq"
+      + protocol                  = "all"
+      + source_type               = (known after apply)
+      + stateless                 = (known after apply)
+      + time_created              = (known after apply)
+    }
+
+  # module.network.oci_core_network_security_group_security_rule.allow_ssh will be created
+  + resource "oci_core_network_security_group_security_rule" "allow_ssh" {
+      + description               = "Allow SSH access"
+      + destination               = (known after apply)
+      + destination_type          = (known after apply)
+      + direction                 = "INGRESS"
+      + id                        = (known after apply)
+      + is_valid                  = (known after apply)
+      + network_security_group_id = "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq"
+      + protocol                  = "6"
+      + source                    = "0.0.0.0/0"
+      + source_type               = "CIDR_BLOCK"
+      + stateless                 = (known after apply)
+      + time_created              = (known after apply)
+
+      + tcp_options {
+          + destination_port_range {
+              + max = 22
+              + min = 22
+            }
+        }
+    }
+
+  # module.network.oci_core_network_security_group_security_rule.allow_web will be created
+  + resource "oci_core_network_security_group_security_rule" "allow_web" {
+      + description               = "Allow HTTP and HTTPS access"
+      + destination               = (known after apply)
+      + destination_type          = (known after apply)
+      + direction                 = "INGRESS"
+      + id                        = (known after apply)
+      + is_valid                  = (known after apply)
+      + network_security_group_id = "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq"
+      + protocol                  = "6"
+      + source                    = "0.0.0.0/0"
+      + source_type               = "CIDR_BLOCK"
+      + stateless                 = (known after apply)
+      + time_created              = (known after apply)
+
+      + tcp_options {
+          + destination_port_range {
+              + max = 80
+              + min = 80
+            }
+        }
+    }
+
+Plan: 9 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + frontend_url          = "https://objectstorage.us-ashburn-1.oraclecloud.com/n/iddg6xbyg1cs/b/saas-platform-frontend-bucket/o/index.html"
+  + instance_public_ip    = (known after apply)
+  + insumopro_bucket_name = "saas-platform-insumopro"
+  + ssh_command           = (sensitive value)
+module.network.oci_core_network_security_group_security_rule.allow_all_egress: Creating...
+oci_objectstorage_bucket.insumopro_bucket: Creating...
+module.network.oci_core_network_security_group_security_rule.allow_ssh: Creating...
+oci_identity_dynamic_group.backend_dg: Creating...
+module.network.oci_core_network_security_group_security_rule.allow_web: Creating...
+oci_objectstorage_bucket.frontend_bucket: Creating...
+module.compute.oci_core_instance.app_vm: Creating...
+module.network.oci_core_network_security_group_security_rule.allow_web: Creation complete after 1s [id=0524DD]
+module.network.oci_core_network_security_group_security_rule.allow_all_egress: Creation complete after 1s [id=82FC93]
+oci_objectstorage_bucket.insumopro_bucket: Creation complete after 1s [id=n/iddg6xbyg1cs/b/saas-platform-insumopro]
+oci_objectstorage_bucket.frontend_bucket: Creation complete after 1s [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket]
+module.network.oci_core_network_security_group_security_rule.allow_ssh: Creation complete after 1s [id=D02556]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m00s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [02m00s elapsed]
+
+Error: 409-IdcsConversionError, Post request failed{"schemas":["urn:ietf:params:scim:api:messages:2.0:Error","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error"],"detail":"DynamicResourceGroup with the same displayName already exists.","status":"409","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error":{"messageId":"error.common.exception.duplicateResource"}}
+Suggestion: The resource is in a conflicted state. Please retry again or contact support for help with service: Identity Dynamic Group
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_dynamic_group 
+API Reference: https://docs.oracle.com/iaas/api/#/en/identity/20160918/DynamicGroup/CreateDynamicGroup 
+Request Target: POST https://identity.us-ashburn-1.oci.oraclecloud.com/20160918/dynamicGroups 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Identity Dynamic Group 
+Operation Name: CreateDynamicGroup 
+OPC request ID: b26eed8aea1987a2f28155d242da1450/453740C41B67B582269B036A4941444C/F0815091F9C97B6D6D5891148BAAA67A 
+
+
+  with oci_identity_dynamic_group.backend_dg,
+  on main.tf line 81, in resource "oci_identity_dynamic_group" "backend_dg":
+  81: resource "oci_identity_dynamic_group" "backend_dg" {
+
+
+Error: 404-NotAuthorizedOrNotFound, Authorization failed or requested resource not found.
+Suggestion: Either the resource has been deleted or service Core Instance need policy to access this resource. Policy reference: https://docs.oracle.com/en-us/iaas/Content/Identity/Reference/policyreference.htm
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.us-ashburn-1.oraclecloud.com/20160918/instances 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: 756df79c94992f1b9408d5f31d602a70/0174D354602C7875AC9A036A494144D1/D55F0FE6FFEEAFCA712C31FAC2313294 
+
+
+  with module.compute.oci_core_instance.app_vm,
+  on ../../modules/compute/main.tf line 10, in resource "oci_core_instance" "app_vm":
+  10: resource "oci_core_instance" "app_vm" {
+
+[2026-05-12 18:27:02] FALHA: Tentativa #1 falhou com código de saída 1.
+[2026-05-12 18:27:02] Aguardando 2 segundos antes da próxima tentativa...
+[2026-05-12 18:27:04] --- Tentativa #2 (AD: 1, Config: 1 OCPU, 1GB RAM, Shape: VM.Standard.E2.1.Micro) ---
+module.compute.data.oci_core_images.ubuntu: Reading...
+data.oci_objectstorage_namespace.ns: Reading...
+data.oci_identity_availability_domains.ads: Reading...
+module.network.oci_core_vcn.main: Refreshing state... [id=ocid1.vcn.oc1.iad.amaaaaaa7xsqx3aaso7q5wmsjrtvmke3yrjwlawsgagdepbal43jvwv6i2tq]
+data.oci_identity_availability_domains.ads: Read complete after 1s [id=IdentityAvailabilityDomainsDataSource-2766122801]
+module.compute.data.oci_core_images.ubuntu: Read complete after 1s [id=CoreImagesDataSource-3929395061]
+module.network.oci_core_internet_gateway.gw: Refreshing state... [id=ocid1.internetgateway.oc1.iad.aaaaaaaaoflkhgsdzu2cpkemaaxoju7nhhxjkx2qbkgzotsywweqbzoj57oq]
+module.network.oci_core_network_security_group.app_nsg: Refreshing state... [id=ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq]
+module.network.oci_core_route_table.main: Refreshing state... [id=ocid1.routetable.oc1.iad.aaaaaaaanzutbgxp377zpbbmzwmgmtg6cen2fbqydhpouekqmivbv5zb7tsq]
+module.network.oci_core_network_security_group_security_rule.allow_all_egress: Refreshing state... [id=82FC93]
+module.network.oci_core_network_security_group_security_rule.allow_ssh: Refreshing state... [id=D02556]
+module.network.oci_core_network_security_group_security_rule.allow_web: Refreshing state... [id=0524DD]
+module.network.oci_core_subnet.public: Refreshing state... [id=ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform planned the following actions, but then encountered a problem:
+
+  # oci_identity_dynamic_group.backend_dg will be created
+  + resource "oci_identity_dynamic_group" "backend_dg" {
+      + compartment_id = "ocid1.tenancy.oc1..aaaaaaaaxi6ah7g2j4vozp7dpp3zavhpb65e4xquysu2zxm67gvododkutjq"
+      + defined_tags   = (known after apply)
+      + description    = "Grupo para a VM acessar o Object Storage"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + matching_rule  = "ALL {instance.compartment.id = 'ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla', tag.Project.value = 'SaaS-Platform'}"
+      + name           = "saas-platform-backend-dg"
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+    }
+
+  # module.compute.oci_core_instance.app_vm will be created
+  + resource "oci_core_instance" "app_vm" {
+      + availability_domain                 = "nOoe:US-ASHBURN-AD-2"
+      + boot_volume_id                      = (known after apply)
+      + capacity_reservation_id             = (known after apply)
+      + compartment_id                      = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + compute_cluster_id                  = (known after apply)
+      + dedicated_vm_host_id                = (known after apply)
+      + defined_tags                        = (known after apply)
+      + display_name                        = "saas-platform-vm"
+      + extended_metadata                   = (known after apply)
+      + fault_domain                        = (known after apply)
+      + freeform_tags                       = {
+          + "ManagedBy" = "Terraform"
+          + "Project"   = "SaaS-Platform"
+        }
+      + hostname_label                      = (known after apply)
+      + id                                  = (known after apply)
+      + image                               = (known after apply)
+      + instance_configuration_id           = (known after apply)
+      + ipxe_script                         = (known after apply)
+      + is_ai_enterprise_enabled            = (known after apply)
+      + is_cross_numa_node                  = (known after apply)
+      + is_pv_encryption_in_transit_enabled = (known after apply)
+      + launch_mode                         = (known after apply)
+      + metadata                            = {
+          + "ssh_authorized_keys" = (sensitive value)
+          + "user_data"           = "IyEvYmluL2Jhc2gKc2V0IC1lCgojIDEuIEV2aXRhIHF1ZSBvIFVidW50dSBhYnJhIGphbmVsYXMgaW50ZXJhdGl2YXMgZHVyYW50ZSBvIGFwdCB1cGdyYWRlCmV4cG9ydCBERUJJQU5fRlJPTlRFTkQ9bm9uaW50ZXJhY3RpdmUKCiMgTG9nIGV2ZXJ5dGhpbmcgdG8gYSBmaWxlCmV4ZWMgPiA+KHRlZSAvdmFyL2xvZy9jbG91ZC1pbml0LW91dHB1dC5sb2d8bG9nZ2VyIC10IHVzZXItZGF0YSAtcyAyPi9kZXYvY29uc29sZSkgMj4mMQoKZWNobyAiLS0tIFN0YXJ0aW5nIENsb3VkLUluaXQgU2NyaXB0IC0tLSIKCmVjaG8gIi0tLSBGb3JjaW5nIGFwdCB0byB1c2UgSVB2NCAtLS0iCmVjaG8gJ0FjcXVpcmU6OkZvcmNlSVB2NCAidHJ1ZSI7JyB8IHRlZSAvZXRjL2FwdC9hcHQuY29uZi5kLzk5Zm9yY2UtaXB2NAoKIyBNYW51YWxseSBzZXQgYSBwdWJsaWMgRE5TIHNlcnZlciBhcyBhIGZhbGxiYWNrIGZvciB0aGlzIHNjcmlwdCdzIHNlc3Npb24uCiMgVGhpcyBpcyBhIHBvd2VyZnVsIGRlYnVnZ2luZyBzdGVwIHRvIGJ5cGFzcyBwb3RlbnRpYWwgVkNOIEROUyBpc3N1ZXMuCmVjaG8gIi0tLSBUZW1wb3JhcmlseSBzZXR0aW5nIHB1YmxpYyBETlMgLS0tIgplY2hvICJuYW1lc2VydmVyIDguOC44LjgiIHwgdGVlIC9ldGMvcmVzb2x2LmNvbmYgPiAvZGV2L251bGwKCiMgV2FpdCBmb3IgbmV0d29yayBhbmQgRE5TIHRvIGJlIHJlYWR5LiBUaGlzIHByZXZlbnRzIGZhaWx1cmVzIG9uIGluaXRpYWwgYm9vdC4KZWNobyAiLS0tIFdhaXRpbmcgZm9yIG5ldHdvcmsgYW5kIEROUyByZXNvbHV0aW9uIC0tLSIKdW50aWwgcGluZyAtYyAxIGdvb2dsZS5jb20gJj4vZGV2L251bGw7IGRvCiAgICBlY2hvICJOZXR3b3JrIG5vdCByZWFkeSwgd2FpdGluZyA1IHNlY29uZHMuLi4iCiAgICBzbGVlcCA1CmRvbmUKZWNobyAiLS0tIE5ldHdvcmsgYW5kIEROUyBhcmUgdXAgLS0tIgoKIyAyLiBVcGRhdGUgZSBVcGdyYWRlIGNvbSBmbGFncyBxdWUgZm9yw6dhbSBvIHVzbyBkYXMgY29uZmlndXJhw6fDtWVzIGF0dWFpcyAoc2VtIHRyYXZhcikKYXB0LWdldCB1cGRhdGUKYXB0LWdldCB1cGdyYWRlIC15IC1vIERwa2c6Ok9wdGlvbnM6Oj0iLS1mb3JjZS1jb25mb2xkIgoKIyAzLiBJbnN0YWxhw6fDo28gZGUgZmVycmFtZW50YXMgYsOhc2ljYXMKYXB0LWdldCBpbnN0YWxsIC15IGFwdC10cmFuc3BvcnQtaHR0cHMgY2EtY2VydGlmaWNhdGVzIGN1cmwgc29mdHdhcmUtcHJvcGVydGllcy1jb21tb24gZ2l0CgoKIyAtLS0gQ3JlYXRlIGFuZCBlbmFibGUgYSAyR0Igc3dhcCBmaWxlIC0tLQplY2hvICJDcmVhdGluZyAyR0Igc3dhcCBmaWxlLi4uIgpmYWxsb2NhdGUgLWwgMkcgL3N3YXBmaWxlCmNobW9kIDYwMCAvc3dhcGZpbGUKbWtzd2FwIC9zd2FwZmlsZQpzd2Fwb24gL3N3YXBmaWxlCiMgTWFrZSB0aGUgc3dhcCBmaWxlIHBlcm1hbmVudAplY2hvICcvc3dhcGZpbGUgbm9uZSBzd2FwIHN3IDAgMCcgfCB0ZWUgLWEgL2V0Yy9mc3RhYgplY2hvICJTd2FwIGZpbGUgY3JlYXRlZCBhbmQgZW5hYmxlZC4iCgojIC0tLSBSZXN0YW50ZSBkbyBzZXUgc2NyaXB0IGRlIERvY2tlciAtLS0KZWNobyAiLS0tIFJ1bm5pbmcgbmV0d29yayBkaWFnbm9zdGljcyBiZWZvcmUgRG9ja2VyIGluc3RhbGwgLS0tIgplY2hvICItLS0gVGVzdGluZyBjb25uZWN0aW9uIHRvIGRvd25sb2FkLmRvY2tlci5jb206NDQzIHdpdGggdmVyYm9zZSBvdXRwdXQgLS0tIgpjdXJsIC12IGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbQplY2hvICItLS0gRGlhZ25vc3RpY3MgZmluaXNoZWQuIFRoZSBjb21tYW5kIGFib3ZlIHNob3VsZCBzaG93IHRoZSBjb25uZWN0aW9uIGF0dGVtcHQuIC0tLSIKCmVjaG8gIi0tLSBJbnN0YWxsaW5nIERvY2tlciAtLS0iCiMgVXNlIC9ldGMvYXB0L2tleXJpbmdzIChwYWRyw6NvIG1vZGVybm8gZG8gRG9ja2VyKSBwYXJhIGV2aXRhciBhdmlzb3MgZGUgc2VndXJhbsOnYQpta2RpciAtcCAvZXRjL2FwdC9rZXlyaW5ncwpjdXJsIC1mc1NMIGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbS9saW51eC91YnVudHUvZ3BnIHwgZ3BnIC0tZGVhcm1vciAtbyAvZXRjL2FwdC9rZXlyaW5ncy9kb2NrZXItYXJjaGl2ZS1rZXlyaW5nLmdwZwoKZWNobyAiZGViIFthcmNoPSQoZHBrZyAtLXByaW50LWFyY2hpdGVjdHVyZSkgc2lnbmVkLWJ5PS9ldGMvYXB0L2tleXJpbmdzL2RvY2tlci1hcmNoaXZlLWtleXJpbmcuZ3BnXSBodHRwczovL2Rvd25sb2FkLmRvY2tlci5jb20vbGludXgvdWJ1bnR1ICQobHNiX3JlbGVhc2UgLWNzKSBzdGFibGUiIHwgdGVlIC9ldGMvYXB0L3NvdXJjZXMubGlzdC5kL2RvY2tlci5saXN0ID4gL2Rldi9udWxsCgphcHQtZ2V0IHVwZGF0ZQphcHQtZ2V0IGluc3RhbGwgLXkgZG9ja2VyLWNlIGRvY2tlci1jZS1jbGkgY29udGFpbmVyZC5pbwoKIyBBZGQgdWJ1bnR1IHVzZXIgdG8gZG9ja2VyIGdyb3VwCnVzZXJtb2QgLWFHIGRvY2tlciB1YnVudHUKCgojIDMuIEluc3RhbGwgRG9ja2VyIENvbXBvc2UgdjIKZWNobyAiLS0tIEluc3RhbGxpbmcgRG9ja2VyIENvbXBvc2UgLS0tIgpET0NLRVJfQ09NUE9TRV9WRVJTSU9OPSJ2Mi4yNC42IiAjIFVzZSBhIHNwZWNpZmljIHZlcnNpb24gZm9yIHN0YWJpbGl0eQpta2RpciAtcCAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMKY3VybCAtU0wgImh0dHBzOi8vZ2l0aHViLmNvbS9kb2NrZXIvY29tcG9zZS9yZWxlYXNlcy9kb3dubG9hZC8ke0RPQ0tFUl9DT01QT1NFX1ZFUlNJT059L2RvY2tlci1jb21wb3NlLWxpbnV4LSQodW5hbWUgLW0pIiAtbyAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMvZG9ja2VyLWNvbXBvc2UKY2htb2QgK3ggL3Vzci9sb2NhbC9saWIvZG9ja2VyL2NsaS1wbHVnaW5zL2RvY2tlci1jb21wb3NlCgojIFZlcmlmeSBpbnN0YWxsYXRpb25zCmRvY2tlciAtLXZlcnNpb24KZG9ja2VyIGNvbXBvc2UgdmVyc2lvbgoKIyA0LiBTZXR1cCBBcHBsaWNhdGlvbiBEaXJlY3RvcnkKZWNobyAiLS0tIFNldHRpbmcgdXAgYXBwbGljYXRpb24gZGlyZWN0b3J5IC0tLSIKQVBQX0RJUj0iL29wdC9zYWFzLXBsYXRmb3JtIgpSRVBPX1VSTD0iaHR0cHM6Ly9naXRodWIuY29tL0FsemlzL29jaS1zYWFzLXBsYXRmb3JtLXYyLmdpdCIgIyA8LS0gQ0hBTkdFIFRISVMKCm1rZGlyIC1wICR7QVBQX0RJUn0KY2hvd24gLVIgdWJ1bnR1OnVidW50dSAke0FQUF9ESVJ9CgojIFdlIHdpbGwgY2xvbmUgdGhlIHJlcG8gYXMgdGhlICd1YnVudHUnIHVzZXIgZHVyaW5nIHRoZSBmaXJzdCBkZXBsb3kKIyBGb3Igbm93LCB0aGUgZGlyZWN0b3J5IGlzIHJlYWR5LgoKIyA1LiBFbmFibGUgRG9ja2VyIHRvIHN0YXJ0IG9uIGJvb3QKc3lzdGVtY3RsIGVuYWJsZSBkb2NrZXIKCiMgQ2xvbmUgdGhlIHJlcG9zaXRvcnkgYXMgdGhlICd1YnVudHUnIHVzZXIKc3VkbyAtdSB1YnVudHUgZ2l0IGNsb25lICR7R0lUX1JFUE9fVVJMfSAke0FQUF9ESVJ9CgppZiBbIC1kICIke0FQUF9ESVJ9L2RlcGxveSIgXTsgdGhlbgogIGVjaG8gIlJlcG9zaXRvcnkgY2xvbmVkLiBTdGFydGluZyBzZXJ2aWNlcy4uLiIKICAjIFVzZSB0aGUgZG9ja2VyIGNvbXBvc2UgcGx1Z2luLCBydW4gYXMgJ3VidW50dScgdXNlcgogICMgUnVuIGFzIHJvb3QgdG8gZW5zdXJlIHBlcm1pc3Npb25zIGFyZSBub3QgYW4gaXNzdWUgZHVyaW5nIGluaXRpYWwgc2V0dXAuCiAgIyBUaGUgJ3VidW50dScgdXNlciBjYW4gbWFuYWdlIGRvY2tlciBsYXRlciB0aGFua3MgdG8gdGhlICd1c2VybW9kJyBjb21tYW5kIGFib3ZlLgogICNkb2NrZXIgY29tcG9zZSAtZiAke0FQUF9ESVJ9L2RlcGxveS9kb2NrZXItY29tcG9zZS55bWwgdXAgLWQKICBlY2hvICJEb2NrZXIgQ29tcG9zZSBzZXJ2aWNlcyBzdGFydGVkLiIKZWxzZQogIGVjaG8gIkZhaWxlZCB0byBjbG9uZSByZXBvc2l0b3J5IG9yIGRvY2tlci1jb21wb3NlLnltbCBub3QgZm91bmQuIgpmaQoKZWNobyAiLS0tIENsb3VkLUluaXQgU2NyaXB0IEZpbmlzaGVkIFN1Y2Nlc3NmdWxseSAtLS0iCgojIFRoZSBkZXBsb3ltZW50IGl0c2VsZiAoY2xvbmluZyB0aGUgcmVwbyBhbmQgcnVubmluZyBkb2NrZXIgY29tcG9zZSkKIyB3aWxsIGJlIGhhbmRsZWQgYnkgdGhlIEdpdEh1YiBBY3Rpb25zIHBpcGVsaW5lLgoKIyAtLS0gNi4gSGVhbHRoY2hlY2sgLS0tCmVjaG8gIi0tLSBSdW5uaW5nIEhlYWx0aGNoZWNrIC0tLSIKCiMgVmVyaWZpY2Egc2UgbyBEb2NrZXIgZXN0w6EgcmVzcG9uZGVuZG8KaWYgZG9ja2VyIHBzID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXI6IE9LIgplbHNlCiAgICBlY2hvICLinYwgRG9ja2VyOiBGQUlMRUQiCiAgICBleGl0IDEKZmkKCiMgVmVyaWZpY2Egc2UgbyBDb21wb3NlIGVzdMOhIGluc3RhbGFkbwppZiBkb2NrZXIgY29tcG9zZSB2ZXJzaW9uID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXIgQ29tcG9zZTogT0siCmVsc2UKICAgIGVjaG8gIuKdjCBEb2NrZXIgQ29tcG9zZTogRkFJTEVEIgogICAgZXhpdCAxCmZpCgojIENyaWEgdW0gbWFyY2Fkb3IgZGUgc3VjZXNzbyBwYXJhIG8gc2V1IHBpcGVsaW5lIHNhYmVyIHF1ZSBhY2Fib3UKdG91Y2ggL3Zhci9sb2cvY2xvdWQtaW5pdC1kb25lCgplY2hvICItLS0gQ2xvdWQtSW5pdCBTY3JpcHQgRmluaXNoZWQgU3VjY2Vzc2Z1bGx5IGF0ICQoZGF0ZSkgLS0tIg=="
+        }
+      + private_ip                          = (known after apply)
+      + public_ip                           = (known after apply)
+      + region                              = (known after apply)
+      + security_attributes                 = (known after apply)
+      + security_attributes_state           = (known after apply)
+      + shape                               = "VM.Standard.E2.1.Micro"
+      + state                               = (known after apply)
+      + subnet_id                           = (known after apply)
+      + system_tags                         = (known after apply)
+      + time_created                        = (known after apply)
+      + time_maintenance_reboot_due         = (known after apply)
+
+      + agent_config (known after apply)
+
+      + availability_config (known after apply)
+
+      + create_vnic_details {
+          + assign_ipv6ip          = (known after apply)
+          + assign_public_ip       = "true"
+          + defined_tags           = (known after apply)
+          + display_name           = (known after apply)
+          + freeform_tags          = (known after apply)
+          + hostname_label         = (known after apply)
+          + nsg_ids                = [
+              + "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq",
+            ]
+          + private_ip             = (known after apply)
+          + private_ip_id          = (known after apply)
+          + security_attributes    = (known after apply)
+          + skip_source_dest_check = (known after apply)
+          + subnet_cidr            = (known after apply)
+          + subnet_id              = "ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq"
+          + vlan_id                = (known after apply)
+
+          + ipv6address_ipv6subnet_cidr_pair_details (known after apply)
+        }
+
+      + instance_options (known after apply)
+
+      + launch_options (known after apply)
+
+      + launch_volume_attachments (known after apply)
+
+      + licensing_configs (known after apply)
+
+      + placement_constraint_details (known after apply)
+
+      + platform_config (known after apply)
+
+      + preemptible_instance_config (known after apply)
+
+      + shape_config (known after apply)
+
+      + source_details {
+          + boot_volume_size_in_gbs = (known after apply)
+          + boot_volume_vpus_per_gb = (known after apply)
+          + source_id               = "ocid1.image.oc1.iad.aaaaaaaaxuoxbmbtrnnkm6n5zcjyu4ac6ocmdcxpdxr6s7ndrcfhroc5maiq"
+          + source_type             = "image"
+
+          + instance_source_image_filter_details (known after apply)
+        }
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + instance_public_ip = (known after apply)
+  + ssh_command        = (sensitive value)
+
+Error: Get "https://objectstorage.us-ashburn-1.oraclecloud.com/n?compartmentId=ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla": dial tcp: lookup objectstorage.us-ashburn-1.oraclecloud.com: no such host
+
+  with data.oci_objectstorage_namespace.ns,
+  on main.tf line 23, in data "oci_objectstorage_namespace" "ns":
+  23: data "oci_objectstorage_namespace" "ns" {
+
+[2026-05-12 18:27:10] FALHA: Tentativa #2 falhou com código de saída 1.
+[2026-05-12 18:27:10] Aguardando 2 segundos antes da próxima tentativa...
+[2026-05-12 18:27:12] --- Tentativa #3 (AD: 2, Config: 1 OCPU, 1GB RAM, Shape: VM.Standard.E2.1.Micro) ---
+data.oci_objectstorage_namespace.ns: Reading...
+data.oci_identity_availability_domains.ads: Reading...
+module.network.oci_core_vcn.main: Refreshing state... [id=ocid1.vcn.oc1.iad.amaaaaaa7xsqx3aaso7q5wmsjrtvmke3yrjwlawsgagdepbal43jvwv6i2tq]
+module.compute.data.oci_core_images.ubuntu: Reading...
+module.network.oci_core_network_security_group.app_nsg: Refreshing state... [id=ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq]
+module.network.oci_core_internet_gateway.gw: Refreshing state... [id=ocid1.internetgateway.oc1.iad.aaaaaaaaoflkhgsdzu2cpkemaaxoju7nhhxjkx2qbkgzotsywweqbzoj57oq]
+data.oci_objectstorage_namespace.ns: Read complete after 1s [id=ObjectStorageNamespaceDataSource-2766122801]
+oci_objectstorage_bucket.frontend_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket]
+oci_objectstorage_bucket.insumopro_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-insumopro]
+data.oci_identity_availability_domains.ads: Read complete after 1s [id=IdentityAvailabilityDomainsDataSource-2766122801]
+module.compute.data.oci_core_images.ubuntu: Read complete after 1s [id=CoreImagesDataSource-3929395061]
+module.network.oci_core_route_table.main: Refreshing state... [id=ocid1.routetable.oc1.iad.aaaaaaaanzutbgxp377zpbbmzwmgmtg6cen2fbqydhpouekqmivbv5zb7tsq]
+module.network.oci_core_network_security_group_security_rule.allow_all_egress: Refreshing state... [id=82FC93]
+module.network.oci_core_network_security_group_security_rule.allow_web: Refreshing state... [id=0524DD]
+module.network.oci_core_network_security_group_security_rule.allow_ssh: Refreshing state... [id=D02556]
+module.network.oci_core_subnet.public: Refreshing state... [id=ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # oci_identity_dynamic_group.backend_dg will be created
+  + resource "oci_identity_dynamic_group" "backend_dg" {
+      + compartment_id = "ocid1.tenancy.oc1..aaaaaaaaxi6ah7g2j4vozp7dpp3zavhpb65e4xquysu2zxm67gvododkutjq"
+      + defined_tags   = (known after apply)
+      + description    = "Grupo para a VM acessar o Object Storage"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + matching_rule  = "ALL {instance.compartment.id = 'ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla', tag.Project.value = 'SaaS-Platform'}"
+      + name           = "saas-platform-backend-dg"
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+    }
+
+  # oci_identity_policy.backend_storage_policy will be created
+  + resource "oci_identity_policy" "backend_storage_policy" {
+      + ETag           = (known after apply)
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + defined_tags   = (known after apply)
+      + description    = "Permite a VM gerenciar objetos no bucket insumopro"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + lastUpdateETag = (known after apply)
+      + name           = "saas-platform-storage-policy"
+      + policyHash     = (known after apply)
+      + state          = (known after apply)
+      + statements     = [
+          + "Allow dynamic-group saas-platform-backend-dg to manage objects in compartment id ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla where target.bucket.name='saas-platform-insumopro'",
+        ]
+      + time_created   = (known after apply)
+      + version_date   = (known after apply)
+    }
+
+  # oci_objectstorage_object.frontend_index will be created
+  + resource "oci_objectstorage_object" "frontend_index" {
+      + bucket                     = "saas-platform-frontend-bucket"
+      + content                    = (known after apply)
+      + content_length             = (known after apply)
+      + content_md5                = (known after apply)
+      + content_type               = "text/html"
+      + delete_all_object_versions = false
+      + id                         = (known after apply)
+      + namespace                  = "iddg6xbyg1cs"
+      + object                     = "index.html"
+      + opc_sse_kms_key_id         = (known after apply)
+      + state                      = (known after apply)
+      + storage_tier               = (known after apply)
+      + version_id                 = (known after apply)
+      + work_request_id            = (known after apply)
+    }
+
+  # module.compute.oci_core_instance.app_vm will be created
+  + resource "oci_core_instance" "app_vm" {
+      + availability_domain                 = "nOoe:US-ASHBURN-AD-3"
+      + boot_volume_id                      = (known after apply)
+      + capacity_reservation_id             = (known after apply)
+      + compartment_id                      = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + compute_cluster_id                  = (known after apply)
+      + dedicated_vm_host_id                = (known after apply)
+      + defined_tags                        = (known after apply)
+      + display_name                        = "saas-platform-vm"
+      + extended_metadata                   = (known after apply)
+      + fault_domain                        = (known after apply)
+      + freeform_tags                       = {
+          + "ManagedBy" = "Terraform"
+          + "Project"   = "SaaS-Platform"
+        }
+      + hostname_label                      = (known after apply)
+      + id                                  = (known after apply)
+      + image                               = (known after apply)
+      + instance_configuration_id           = (known after apply)
+      + ipxe_script                         = (known after apply)
+      + is_ai_enterprise_enabled            = (known after apply)
+      + is_cross_numa_node                  = (known after apply)
+      + is_pv_encryption_in_transit_enabled = (known after apply)
+      + launch_mode                         = (known after apply)
+      + metadata                            = {
+          + "ssh_authorized_keys" = (sensitive value)
+          + "user_data"           = "IyEvYmluL2Jhc2gKc2V0IC1lCgojIDEuIEV2aXRhIHF1ZSBvIFVidW50dSBhYnJhIGphbmVsYXMgaW50ZXJhdGl2YXMgZHVyYW50ZSBvIGFwdCB1cGdyYWRlCmV4cG9ydCBERUJJQU5fRlJPTlRFTkQ9bm9uaW50ZXJhY3RpdmUKCiMgTG9nIGV2ZXJ5dGhpbmcgdG8gYSBmaWxlCmV4ZWMgPiA+KHRlZSAvdmFyL2xvZy9jbG91ZC1pbml0LW91dHB1dC5sb2d8bG9nZ2VyIC10IHVzZXItZGF0YSAtcyAyPi9kZXYvY29uc29sZSkgMj4mMQoKZWNobyAiLS0tIFN0YXJ0aW5nIENsb3VkLUluaXQgU2NyaXB0IC0tLSIKCmVjaG8gIi0tLSBGb3JjaW5nIGFwdCB0byB1c2UgSVB2NCAtLS0iCmVjaG8gJ0FjcXVpcmU6OkZvcmNlSVB2NCAidHJ1ZSI7JyB8IHRlZSAvZXRjL2FwdC9hcHQuY29uZi5kLzk5Zm9yY2UtaXB2NAoKIyBNYW51YWxseSBzZXQgYSBwdWJsaWMgRE5TIHNlcnZlciBhcyBhIGZhbGxiYWNrIGZvciB0aGlzIHNjcmlwdCdzIHNlc3Npb24uCiMgVGhpcyBpcyBhIHBvd2VyZnVsIGRlYnVnZ2luZyBzdGVwIHRvIGJ5cGFzcyBwb3RlbnRpYWwgVkNOIEROUyBpc3N1ZXMuCmVjaG8gIi0tLSBUZW1wb3JhcmlseSBzZXR0aW5nIHB1YmxpYyBETlMgLS0tIgplY2hvICJuYW1lc2VydmVyIDguOC44LjgiIHwgdGVlIC9ldGMvcmVzb2x2LmNvbmYgPiAvZGV2L251bGwKCiMgV2FpdCBmb3IgbmV0d29yayBhbmQgRE5TIHRvIGJlIHJlYWR5LiBUaGlzIHByZXZlbnRzIGZhaWx1cmVzIG9uIGluaXRpYWwgYm9vdC4KZWNobyAiLS0tIFdhaXRpbmcgZm9yIG5ldHdvcmsgYW5kIEROUyByZXNvbHV0aW9uIC0tLSIKdW50aWwgcGluZyAtYyAxIGdvb2dsZS5jb20gJj4vZGV2L251bGw7IGRvCiAgICBlY2hvICJOZXR3b3JrIG5vdCByZWFkeSwgd2FpdGluZyA1IHNlY29uZHMuLi4iCiAgICBzbGVlcCA1CmRvbmUKZWNobyAiLS0tIE5ldHdvcmsgYW5kIEROUyBhcmUgdXAgLS0tIgoKIyAyLiBVcGRhdGUgZSBVcGdyYWRlIGNvbSBmbGFncyBxdWUgZm9yw6dhbSBvIHVzbyBkYXMgY29uZmlndXJhw6fDtWVzIGF0dWFpcyAoc2VtIHRyYXZhcikKYXB0LWdldCB1cGRhdGUKYXB0LWdldCB1cGdyYWRlIC15IC1vIERwa2c6Ok9wdGlvbnM6Oj0iLS1mb3JjZS1jb25mb2xkIgoKIyAzLiBJbnN0YWxhw6fDo28gZGUgZmVycmFtZW50YXMgYsOhc2ljYXMKYXB0LWdldCBpbnN0YWxsIC15IGFwdC10cmFuc3BvcnQtaHR0cHMgY2EtY2VydGlmaWNhdGVzIGN1cmwgc29mdHdhcmUtcHJvcGVydGllcy1jb21tb24gZ2l0CgoKIyAtLS0gQ3JlYXRlIGFuZCBlbmFibGUgYSAyR0Igc3dhcCBmaWxlIC0tLQplY2hvICJDcmVhdGluZyAyR0Igc3dhcCBmaWxlLi4uIgpmYWxsb2NhdGUgLWwgMkcgL3N3YXBmaWxlCmNobW9kIDYwMCAvc3dhcGZpbGUKbWtzd2FwIC9zd2FwZmlsZQpzd2Fwb24gL3N3YXBmaWxlCiMgTWFrZSB0aGUgc3dhcCBmaWxlIHBlcm1hbmVudAplY2hvICcvc3dhcGZpbGUgbm9uZSBzd2FwIHN3IDAgMCcgfCB0ZWUgLWEgL2V0Yy9mc3RhYgplY2hvICJTd2FwIGZpbGUgY3JlYXRlZCBhbmQgZW5hYmxlZC4iCgojIC0tLSBSZXN0YW50ZSBkbyBzZXUgc2NyaXB0IGRlIERvY2tlciAtLS0KZWNobyAiLS0tIFJ1bm5pbmcgbmV0d29yayBkaWFnbm9zdGljcyBiZWZvcmUgRG9ja2VyIGluc3RhbGwgLS0tIgplY2hvICItLS0gVGVzdGluZyBjb25uZWN0aW9uIHRvIGRvd25sb2FkLmRvY2tlci5jb206NDQzIHdpdGggdmVyYm9zZSBvdXRwdXQgLS0tIgpjdXJsIC12IGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbQplY2hvICItLS0gRGlhZ25vc3RpY3MgZmluaXNoZWQuIFRoZSBjb21tYW5kIGFib3ZlIHNob3VsZCBzaG93IHRoZSBjb25uZWN0aW9uIGF0dGVtcHQuIC0tLSIKCmVjaG8gIi0tLSBJbnN0YWxsaW5nIERvY2tlciAtLS0iCiMgVXNlIC9ldGMvYXB0L2tleXJpbmdzIChwYWRyw6NvIG1vZGVybm8gZG8gRG9ja2VyKSBwYXJhIGV2aXRhciBhdmlzb3MgZGUgc2VndXJhbsOnYQpta2RpciAtcCAvZXRjL2FwdC9rZXlyaW5ncwpjdXJsIC1mc1NMIGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbS9saW51eC91YnVudHUvZ3BnIHwgZ3BnIC0tZGVhcm1vciAtbyAvZXRjL2FwdC9rZXlyaW5ncy9kb2NrZXItYXJjaGl2ZS1rZXlyaW5nLmdwZwoKZWNobyAiZGViIFthcmNoPSQoZHBrZyAtLXByaW50LWFyY2hpdGVjdHVyZSkgc2lnbmVkLWJ5PS9ldGMvYXB0L2tleXJpbmdzL2RvY2tlci1hcmNoaXZlLWtleXJpbmcuZ3BnXSBodHRwczovL2Rvd25sb2FkLmRvY2tlci5jb20vbGludXgvdWJ1bnR1ICQobHNiX3JlbGVhc2UgLWNzKSBzdGFibGUiIHwgdGVlIC9ldGMvYXB0L3NvdXJjZXMubGlzdC5kL2RvY2tlci5saXN0ID4gL2Rldi9udWxsCgphcHQtZ2V0IHVwZGF0ZQphcHQtZ2V0IGluc3RhbGwgLXkgZG9ja2VyLWNlIGRvY2tlci1jZS1jbGkgY29udGFpbmVyZC5pbwoKIyBBZGQgdWJ1bnR1IHVzZXIgdG8gZG9ja2VyIGdyb3VwCnVzZXJtb2QgLWFHIGRvY2tlciB1YnVudHUKCgojIDMuIEluc3RhbGwgRG9ja2VyIENvbXBvc2UgdjIKZWNobyAiLS0tIEluc3RhbGxpbmcgRG9ja2VyIENvbXBvc2UgLS0tIgpET0NLRVJfQ09NUE9TRV9WRVJTSU9OPSJ2Mi4yNC42IiAjIFVzZSBhIHNwZWNpZmljIHZlcnNpb24gZm9yIHN0YWJpbGl0eQpta2RpciAtcCAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMKY3VybCAtU0wgImh0dHBzOi8vZ2l0aHViLmNvbS9kb2NrZXIvY29tcG9zZS9yZWxlYXNlcy9kb3dubG9hZC8ke0RPQ0tFUl9DT01QT1NFX1ZFUlNJT059L2RvY2tlci1jb21wb3NlLWxpbnV4LSQodW5hbWUgLW0pIiAtbyAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMvZG9ja2VyLWNvbXBvc2UKY2htb2QgK3ggL3Vzci9sb2NhbC9saWIvZG9ja2VyL2NsaS1wbHVnaW5zL2RvY2tlci1jb21wb3NlCgojIFZlcmlmeSBpbnN0YWxsYXRpb25zCmRvY2tlciAtLXZlcnNpb24KZG9ja2VyIGNvbXBvc2UgdmVyc2lvbgoKIyA0LiBTZXR1cCBBcHBsaWNhdGlvbiBEaXJlY3RvcnkKZWNobyAiLS0tIFNldHRpbmcgdXAgYXBwbGljYXRpb24gZGlyZWN0b3J5IC0tLSIKQVBQX0RJUj0iL29wdC9zYWFzLXBsYXRmb3JtIgpSRVBPX1VSTD0iaHR0cHM6Ly9naXRodWIuY29tL0FsemlzL29jaS1zYWFzLXBsYXRmb3JtLXYyLmdpdCIgIyA8LS0gQ0hBTkdFIFRISVMKCm1rZGlyIC1wICR7QVBQX0RJUn0KY2hvd24gLVIgdWJ1bnR1OnVidW50dSAke0FQUF9ESVJ9CgojIFdlIHdpbGwgY2xvbmUgdGhlIHJlcG8gYXMgdGhlICd1YnVudHUnIHVzZXIgZHVyaW5nIHRoZSBmaXJzdCBkZXBsb3kKIyBGb3Igbm93LCB0aGUgZGlyZWN0b3J5IGlzIHJlYWR5LgoKIyA1LiBFbmFibGUgRG9ja2VyIHRvIHN0YXJ0IG9uIGJvb3QKc3lzdGVtY3RsIGVuYWJsZSBkb2NrZXIKCiMgQ2xvbmUgdGhlIHJlcG9zaXRvcnkgYXMgdGhlICd1YnVudHUnIHVzZXIKc3VkbyAtdSB1YnVudHUgZ2l0IGNsb25lICR7R0lUX1JFUE9fVVJMfSAke0FQUF9ESVJ9CgppZiBbIC1kICIke0FQUF9ESVJ9L2RlcGxveSIgXTsgdGhlbgogIGVjaG8gIlJlcG9zaXRvcnkgY2xvbmVkLiBTdGFydGluZyBzZXJ2aWNlcy4uLiIKICAjIFVzZSB0aGUgZG9ja2VyIGNvbXBvc2UgcGx1Z2luLCBydW4gYXMgJ3VidW50dScgdXNlcgogICMgUnVuIGFzIHJvb3QgdG8gZW5zdXJlIHBlcm1pc3Npb25zIGFyZSBub3QgYW4gaXNzdWUgZHVyaW5nIGluaXRpYWwgc2V0dXAuCiAgIyBUaGUgJ3VidW50dScgdXNlciBjYW4gbWFuYWdlIGRvY2tlciBsYXRlciB0aGFua3MgdG8gdGhlICd1c2VybW9kJyBjb21tYW5kIGFib3ZlLgogICNkb2NrZXIgY29tcG9zZSAtZiAke0FQUF9ESVJ9L2RlcGxveS9kb2NrZXItY29tcG9zZS55bWwgdXAgLWQKICBlY2hvICJEb2NrZXIgQ29tcG9zZSBzZXJ2aWNlcyBzdGFydGVkLiIKZWxzZQogIGVjaG8gIkZhaWxlZCB0byBjbG9uZSByZXBvc2l0b3J5IG9yIGRvY2tlci1jb21wb3NlLnltbCBub3QgZm91bmQuIgpmaQoKZWNobyAiLS0tIENsb3VkLUluaXQgU2NyaXB0IEZpbmlzaGVkIFN1Y2Nlc3NmdWxseSAtLS0iCgojIFRoZSBkZXBsb3ltZW50IGl0c2VsZiAoY2xvbmluZyB0aGUgcmVwbyBhbmQgcnVubmluZyBkb2NrZXIgY29tcG9zZSkKIyB3aWxsIGJlIGhhbmRsZWQgYnkgdGhlIEdpdEh1YiBBY3Rpb25zIHBpcGVsaW5lLgoKIyAtLS0gNi4gSGVhbHRoY2hlY2sgLS0tCmVjaG8gIi0tLSBSdW5uaW5nIEhlYWx0aGNoZWNrIC0tLSIKCiMgVmVyaWZpY2Egc2UgbyBEb2NrZXIgZXN0w6EgcmVzcG9uZGVuZG8KaWYgZG9ja2VyIHBzID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXI6IE9LIgplbHNlCiAgICBlY2hvICLinYwgRG9ja2VyOiBGQUlMRUQiCiAgICBleGl0IDEKZmkKCiMgVmVyaWZpY2Egc2UgbyBDb21wb3NlIGVzdMOhIGluc3RhbGFkbwppZiBkb2NrZXIgY29tcG9zZSB2ZXJzaW9uID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXIgQ29tcG9zZTogT0siCmVsc2UKICAgIGVjaG8gIuKdjCBEb2NrZXIgQ29tcG9zZTogRkFJTEVEIgogICAgZXhpdCAxCmZpCgojIENyaWEgdW0gbWFyY2Fkb3IgZGUgc3VjZXNzbyBwYXJhIG8gc2V1IHBpcGVsaW5lIHNhYmVyIHF1ZSBhY2Fib3UKdG91Y2ggL3Zhci9sb2cvY2xvdWQtaW5pdC1kb25lCgplY2hvICItLS0gQ2xvdWQtSW5pdCBTY3JpcHQgRmluaXNoZWQgU3VjY2Vzc2Z1bGx5IGF0ICQoZGF0ZSkgLS0tIg=="
+        }
+      + private_ip                          = (known after apply)
+      + public_ip                           = (known after apply)
+      + region                              = (known after apply)
+      + security_attributes                 = (known after apply)
+      + security_attributes_state           = (known after apply)
+      + shape                               = "VM.Standard.E2.1.Micro"
+      + state                               = (known after apply)
+      + subnet_id                           = (known after apply)
+      + system_tags                         = (known after apply)
+      + time_created                        = (known after apply)
+      + time_maintenance_reboot_due         = (known after apply)
+
+      + agent_config (known after apply)
+
+      + availability_config (known after apply)
+
+      + create_vnic_details {
+          + assign_ipv6ip          = (known after apply)
+          + assign_public_ip       = "true"
+          + defined_tags           = (known after apply)
+          + display_name           = (known after apply)
+          + freeform_tags          = (known after apply)
+          + hostname_label         = (known after apply)
+          + nsg_ids                = [
+              + "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq",
+            ]
+          + private_ip             = (known after apply)
+          + private_ip_id          = (known after apply)
+          + security_attributes    = (known after apply)
+          + skip_source_dest_check = (known after apply)
+          + subnet_cidr            = (known after apply)
+          + subnet_id              = "ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq"
+          + vlan_id                = (known after apply)
+
+          + ipv6address_ipv6subnet_cidr_pair_details (known after apply)
+        }
+
+      + instance_options (known after apply)
+
+      + launch_options (known after apply)
+
+      + launch_volume_attachments (known after apply)
+
+      + licensing_configs (known after apply)
+
+      + placement_constraint_details (known after apply)
+
+      + platform_config (known after apply)
+
+      + preemptible_instance_config (known after apply)
+
+      + shape_config (known after apply)
+
+      + source_details {
+          + boot_volume_size_in_gbs = (known after apply)
+          + boot_volume_vpus_per_gb = (known after apply)
+          + source_id               = "ocid1.image.oc1.iad.aaaaaaaaxuoxbmbtrnnkm6n5zcjyu4ac6ocmdcxpdxr6s7ndrcfhroc5maiq"
+          + source_type             = "image"
+
+          + instance_source_image_filter_details (known after apply)
+        }
+    }
+
+Plan: 4 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + instance_public_ip    = (known after apply)
+  + ssh_command           = (sensitive value)
+oci_identity_dynamic_group.backend_dg: Creating...
+module.compute.oci_core_instance.app_vm: Creating...
+oci_identity_dynamic_group.backend_dg: Still creating... [00m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m00s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [02m00s elapsed]
+
+Error: 409-IdcsConversionError, Post request failed{"schemas":["urn:ietf:params:scim:api:messages:2.0:Error","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error"],"detail":"DynamicResourceGroup with the same displayName already exists.","status":"409","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error":{"messageId":"error.common.exception.duplicateResource"}}
+Suggestion: The resource is in a conflicted state. Please retry again or contact support for help with service: Identity Dynamic Group
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_dynamic_group 
+API Reference: https://docs.oracle.com/iaas/api/#/en/identity/20160918/DynamicGroup/CreateDynamicGroup 
+Request Target: POST https://identity.us-ashburn-1.oci.oraclecloud.com/20160918/dynamicGroups 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Identity Dynamic Group 
+Operation Name: CreateDynamicGroup 
+OPC request ID: da180c83eb7fcd4d1236e1c96ea416a7/5C30613388FA9B0AB09B036A494144A8/35F76539ADF20B20A2FEACABE1296FE9 
+
+
+  with oci_identity_dynamic_group.backend_dg,
+  on main.tf line 81, in resource "oci_identity_dynamic_group" "backend_dg":
+  81: resource "oci_identity_dynamic_group" "backend_dg" {
+
+
+Error: 404-NotAuthorizedOrNotFound, Authorization failed or requested resource not found.
+Suggestion: Either the resource has been deleted or service Core Instance need policy to access this resource. Policy reference: https://docs.oracle.com/en-us/iaas/Content/Identity/Reference/policyreference.htm
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.us-ashburn-1.oraclecloud.com/20160918/instances 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: 45df75552283f7838fcb5d75efc7425e/078AA55014A5604D379B036A494144D9/E7A7BF7CFFAE82A2202A05A17B819952 
+
+
+  with module.compute.oci_core_instance.app_vm,
+  on ../../modules/compute/main.tf line 10, in resource "oci_core_instance" "app_vm":
+  10: resource "oci_core_instance" "app_vm" {
+
+[2026-05-12 18:29:20] FALHA: Tentativa #3 falhou com código de saída 1.
+[2026-05-12 18:29:20] Aguardando 2 segundos antes da próxima tentativa...
+[2026-05-12 18:29:22] Todas as combinações falharam neste ciclo. Aguardando 10 segundos para reiniciar.
+[2026-05-12 18:29:32] --- Tentativa #4 (AD: 0, Config: 1 OCPU, 1GB RAM, Shape: VM.Standard.E2.1.Micro) ---
+module.compute.data.oci_core_images.ubuntu: Reading...
+data.oci_objectstorage_namespace.ns: Reading...
+module.network.oci_core_vcn.main: Refreshing state... [id=ocid1.vcn.oc1.iad.amaaaaaa7xsqx3aaso7q5wmsjrtvmke3yrjwlawsgagdepbal43jvwv6i2tq]
+data.oci_identity_availability_domains.ads: Reading...
+data.oci_objectstorage_namespace.ns: Read complete after 0s [id=ObjectStorageNamespaceDataSource-2766122801]
+oci_objectstorage_bucket.insumopro_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-insumopro]
+oci_objectstorage_bucket.frontend_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket]
+module.network.oci_core_network_security_group.app_nsg: Refreshing state... [id=ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq]
+module.network.oci_core_internet_gateway.gw: Refreshing state... [id=ocid1.internetgateway.oc1.iad.aaaaaaaaoflkhgsdzu2cpkemaaxoju7nhhxjkx2qbkgzotsywweqbzoj57oq]
+module.compute.data.oci_core_images.ubuntu: Read complete after 0s [id=CoreImagesDataSource-3929395061]
+data.oci_identity_availability_domains.ads: Read complete after 0s [id=IdentityAvailabilityDomainsDataSource-2766122801]
+module.network.oci_core_route_table.main: Refreshing state... [id=ocid1.routetable.oc1.iad.aaaaaaaanzutbgxp377zpbbmzwmgmtg6cen2fbqydhpouekqmivbv5zb7tsq]
+module.network.oci_core_network_security_group_security_rule.allow_ssh: Refreshing state... [id=D02556]
+module.network.oci_core_network_security_group_security_rule.allow_all_egress: Refreshing state... [id=82FC93]
+module.network.oci_core_network_security_group_security_rule.allow_web: Refreshing state... [id=0524DD]
+module.network.oci_core_subnet.public: Refreshing state... [id=ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # oci_identity_dynamic_group.backend_dg will be created
+  + resource "oci_identity_dynamic_group" "backend_dg" {
+      + compartment_id = "ocid1.tenancy.oc1..aaaaaaaaxi6ah7g2j4vozp7dpp3zavhpb65e4xquysu2zxm67gvododkutjq"
+      + defined_tags   = (known after apply)
+      + description    = "Grupo para a VM acessar o Object Storage"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + matching_rule  = "ALL {instance.compartment.id = 'ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla', tag.Project.value = 'SaaS-Platform'}"
+      + name           = "saas-platform-backend-dg"
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+    }
+
+  # oci_identity_policy.backend_storage_policy will be created
+  + resource "oci_identity_policy" "backend_storage_policy" {
+      + ETag           = (known after apply)
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + defined_tags   = (known after apply)
+      + description    = "Permite a VM gerenciar objetos no bucket insumopro"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + lastUpdateETag = (known after apply)
+      + name           = "saas-platform-storage-policy"
+      + policyHash     = (known after apply)
+      + state          = (known after apply)
+      + statements     = [
+          + "Allow dynamic-group saas-platform-backend-dg to manage objects in compartment id ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla where target.bucket.name='saas-platform-insumopro'",
+        ]
+      + time_created   = (known after apply)
+      + version_date   = (known after apply)
+    }
+
+  # oci_objectstorage_object.frontend_index will be created
+  + resource "oci_objectstorage_object" "frontend_index" {
+      + bucket                     = "saas-platform-frontend-bucket"
+      + content                    = (known after apply)
+      + content_length             = (known after apply)
+      + content_md5                = (known after apply)
+      + content_type               = "text/html"
+      + delete_all_object_versions = false
+      + id                         = (known after apply)
+      + namespace                  = "iddg6xbyg1cs"
+      + object                     = "index.html"
+      + opc_sse_kms_key_id         = (known after apply)
+      + state                      = (known after apply)
+      + storage_tier               = (known after apply)
+      + version_id                 = (known after apply)
+      + work_request_id            = (known after apply)
+    }
+
+  # module.compute.oci_core_instance.app_vm will be created
+  + resource "oci_core_instance" "app_vm" {
+      + availability_domain                 = "nOoe:US-ASHBURN-AD-1"
+      + boot_volume_id                      = (known after apply)
+      + capacity_reservation_id             = (known after apply)
+      + compartment_id                      = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + compute_cluster_id                  = (known after apply)
+      + dedicated_vm_host_id                = (known after apply)
+      + defined_tags                        = (known after apply)
+      + display_name                        = "saas-platform-vm"
+      + extended_metadata                   = (known after apply)
+      + fault_domain                        = (known after apply)
+      + freeform_tags                       = {
+          + "ManagedBy" = "Terraform"
+          + "Project"   = "SaaS-Platform"
+        }
+      + hostname_label                      = (known after apply)
+      + id                                  = (known after apply)
+      + image                               = (known after apply)
+      + instance_configuration_id           = (known after apply)
+      + ipxe_script                         = (known after apply)
+      + is_ai_enterprise_enabled            = (known after apply)
+      + is_cross_numa_node                  = (known after apply)
+      + is_pv_encryption_in_transit_enabled = (known after apply)
+      + launch_mode                         = (known after apply)
+      + metadata                            = {
+          + "ssh_authorized_keys" = (sensitive value)
+          + "user_data"           = "IyEvYmluL2Jhc2gKc2V0IC1lCgojIDEuIEV2aXRhIHF1ZSBvIFVidW50dSBhYnJhIGphbmVsYXMgaW50ZXJhdGl2YXMgZHVyYW50ZSBvIGFwdCB1cGdyYWRlCmV4cG9ydCBERUJJQU5fRlJPTlRFTkQ9bm9uaW50ZXJhY3RpdmUKCiMgTG9nIGV2ZXJ5dGhpbmcgdG8gYSBmaWxlCmV4ZWMgPiA+KHRlZSAvdmFyL2xvZy9jbG91ZC1pbml0LW91dHB1dC5sb2d8bG9nZ2VyIC10IHVzZXItZGF0YSAtcyAyPi9kZXYvY29uc29sZSkgMj4mMQoKZWNobyAiLS0tIFN0YXJ0aW5nIENsb3VkLUluaXQgU2NyaXB0IC0tLSIKCmVjaG8gIi0tLSBGb3JjaW5nIGFwdCB0byB1c2UgSVB2NCAtLS0iCmVjaG8gJ0FjcXVpcmU6OkZvcmNlSVB2NCAidHJ1ZSI7JyB8IHRlZSAvZXRjL2FwdC9hcHQuY29uZi5kLzk5Zm9yY2UtaXB2NAoKIyBNYW51YWxseSBzZXQgYSBwdWJsaWMgRE5TIHNlcnZlciBhcyBhIGZhbGxiYWNrIGZvciB0aGlzIHNjcmlwdCdzIHNlc3Npb24uCiMgVGhpcyBpcyBhIHBvd2VyZnVsIGRlYnVnZ2luZyBzdGVwIHRvIGJ5cGFzcyBwb3RlbnRpYWwgVkNOIEROUyBpc3N1ZXMuCmVjaG8gIi0tLSBUZW1wb3JhcmlseSBzZXR0aW5nIHB1YmxpYyBETlMgLS0tIgplY2hvICJuYW1lc2VydmVyIDguOC44LjgiIHwgdGVlIC9ldGMvcmVzb2x2LmNvbmYgPiAvZGV2L251bGwKCiMgV2FpdCBmb3IgbmV0d29yayBhbmQgRE5TIHRvIGJlIHJlYWR5LiBUaGlzIHByZXZlbnRzIGZhaWx1cmVzIG9uIGluaXRpYWwgYm9vdC4KZWNobyAiLS0tIFdhaXRpbmcgZm9yIG5ldHdvcmsgYW5kIEROUyByZXNvbHV0aW9uIC0tLSIKdW50aWwgcGluZyAtYyAxIGdvb2dsZS5jb20gJj4vZGV2L251bGw7IGRvCiAgICBlY2hvICJOZXR3b3JrIG5vdCByZWFkeSwgd2FpdGluZyA1IHNlY29uZHMuLi4iCiAgICBzbGVlcCA1CmRvbmUKZWNobyAiLS0tIE5ldHdvcmsgYW5kIEROUyBhcmUgdXAgLS0tIgoKIyAyLiBVcGRhdGUgZSBVcGdyYWRlIGNvbSBmbGFncyBxdWUgZm9yw6dhbSBvIHVzbyBkYXMgY29uZmlndXJhw6fDtWVzIGF0dWFpcyAoc2VtIHRyYXZhcikKYXB0LWdldCB1cGRhdGUKYXB0LWdldCB1cGdyYWRlIC15IC1vIERwa2c6Ok9wdGlvbnM6Oj0iLS1mb3JjZS1jb25mb2xkIgoKIyAzLiBJbnN0YWxhw6fDo28gZGUgZmVycmFtZW50YXMgYsOhc2ljYXMKYXB0LWdldCBpbnN0YWxsIC15IGFwdC10cmFuc3BvcnQtaHR0cHMgY2EtY2VydGlmaWNhdGVzIGN1cmwgc29mdHdhcmUtcHJvcGVydGllcy1jb21tb24gZ2l0CgoKIyAtLS0gQ3JlYXRlIGFuZCBlbmFibGUgYSAyR0Igc3dhcCBmaWxlIC0tLQplY2hvICJDcmVhdGluZyAyR0Igc3dhcCBmaWxlLi4uIgpmYWxsb2NhdGUgLWwgMkcgL3N3YXBmaWxlCmNobW9kIDYwMCAvc3dhcGZpbGUKbWtzd2FwIC9zd2FwZmlsZQpzd2Fwb24gL3N3YXBmaWxlCiMgTWFrZSB0aGUgc3dhcCBmaWxlIHBlcm1hbmVudAplY2hvICcvc3dhcGZpbGUgbm9uZSBzd2FwIHN3IDAgMCcgfCB0ZWUgLWEgL2V0Yy9mc3RhYgplY2hvICJTd2FwIGZpbGUgY3JlYXRlZCBhbmQgZW5hYmxlZC4iCgojIC0tLSBSZXN0YW50ZSBkbyBzZXUgc2NyaXB0IGRlIERvY2tlciAtLS0KZWNobyAiLS0tIFJ1bm5pbmcgbmV0d29yayBkaWFnbm9zdGljcyBiZWZvcmUgRG9ja2VyIGluc3RhbGwgLS0tIgplY2hvICItLS0gVGVzdGluZyBjb25uZWN0aW9uIHRvIGRvd25sb2FkLmRvY2tlci5jb206NDQzIHdpdGggdmVyYm9zZSBvdXRwdXQgLS0tIgpjdXJsIC12IGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbQplY2hvICItLS0gRGlhZ25vc3RpY3MgZmluaXNoZWQuIFRoZSBjb21tYW5kIGFib3ZlIHNob3VsZCBzaG93IHRoZSBjb25uZWN0aW9uIGF0dGVtcHQuIC0tLSIKCmVjaG8gIi0tLSBJbnN0YWxsaW5nIERvY2tlciAtLS0iCiMgVXNlIC9ldGMvYXB0L2tleXJpbmdzIChwYWRyw6NvIG1vZGVybm8gZG8gRG9ja2VyKSBwYXJhIGV2aXRhciBhdmlzb3MgZGUgc2VndXJhbsOnYQpta2RpciAtcCAvZXRjL2FwdC9rZXlyaW5ncwpjdXJsIC1mc1NMIGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbS9saW51eC91YnVudHUvZ3BnIHwgZ3BnIC0tZGVhcm1vciAtbyAvZXRjL2FwdC9rZXlyaW5ncy9kb2NrZXItYXJjaGl2ZS1rZXlyaW5nLmdwZwoKZWNobyAiZGViIFthcmNoPSQoZHBrZyAtLXByaW50LWFyY2hpdGVjdHVyZSkgc2lnbmVkLWJ5PS9ldGMvYXB0L2tleXJpbmdzL2RvY2tlci1hcmNoaXZlLWtleXJpbmcuZ3BnXSBodHRwczovL2Rvd25sb2FkLmRvY2tlci5jb20vbGludXgvdWJ1bnR1ICQobHNiX3JlbGVhc2UgLWNzKSBzdGFibGUiIHwgdGVlIC9ldGMvYXB0L3NvdXJjZXMubGlzdC5kL2RvY2tlci5saXN0ID4gL2Rldi9udWxsCgphcHQtZ2V0IHVwZGF0ZQphcHQtZ2V0IGluc3RhbGwgLXkgZG9ja2VyLWNlIGRvY2tlci1jZS1jbGkgY29udGFpbmVyZC5pbwoKIyBBZGQgdWJ1bnR1IHVzZXIgdG8gZG9ja2VyIGdyb3VwCnVzZXJtb2QgLWFHIGRvY2tlciB1YnVudHUKCgojIDMuIEluc3RhbGwgRG9ja2VyIENvbXBvc2UgdjIKZWNobyAiLS0tIEluc3RhbGxpbmcgRG9ja2VyIENvbXBvc2UgLS0tIgpET0NLRVJfQ09NUE9TRV9WRVJTSU9OPSJ2Mi4yNC42IiAjIFVzZSBhIHNwZWNpZmljIHZlcnNpb24gZm9yIHN0YWJpbGl0eQpta2RpciAtcCAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMKY3VybCAtU0wgImh0dHBzOi8vZ2l0aHViLmNvbS9kb2NrZXIvY29tcG9zZS9yZWxlYXNlcy9kb3dubG9hZC8ke0RPQ0tFUl9DT01QT1NFX1ZFUlNJT059L2RvY2tlci1jb21wb3NlLWxpbnV4LSQodW5hbWUgLW0pIiAtbyAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMvZG9ja2VyLWNvbXBvc2UKY2htb2QgK3ggL3Vzci9sb2NhbC9saWIvZG9ja2VyL2NsaS1wbHVnaW5zL2RvY2tlci1jb21wb3NlCgojIFZlcmlmeSBpbnN0YWxsYXRpb25zCmRvY2tlciAtLXZlcnNpb24KZG9ja2VyIGNvbXBvc2UgdmVyc2lvbgoKIyA0LiBTZXR1cCBBcHBsaWNhdGlvbiBEaXJlY3RvcnkKZWNobyAiLS0tIFNldHRpbmcgdXAgYXBwbGljYXRpb24gZGlyZWN0b3J5IC0tLSIKQVBQX0RJUj0iL29wdC9zYWFzLXBsYXRmb3JtIgpSRVBPX1VSTD0iaHR0cHM6Ly9naXRodWIuY29tL0FsemlzL29jaS1zYWFzLXBsYXRmb3JtLXYyLmdpdCIgIyA8LS0gQ0hBTkdFIFRISVMKCm1rZGlyIC1wICR7QVBQX0RJUn0KY2hvd24gLVIgdWJ1bnR1OnVidW50dSAke0FQUF9ESVJ9CgojIFdlIHdpbGwgY2xvbmUgdGhlIHJlcG8gYXMgdGhlICd1YnVudHUnIHVzZXIgZHVyaW5nIHRoZSBmaXJzdCBkZXBsb3kKIyBGb3Igbm93LCB0aGUgZGlyZWN0b3J5IGlzIHJlYWR5LgoKIyA1LiBFbmFibGUgRG9ja2VyIHRvIHN0YXJ0IG9uIGJvb3QKc3lzdGVtY3RsIGVuYWJsZSBkb2NrZXIKCiMgQ2xvbmUgdGhlIHJlcG9zaXRvcnkgYXMgdGhlICd1YnVudHUnIHVzZXIKc3VkbyAtdSB1YnVudHUgZ2l0IGNsb25lICR7R0lUX1JFUE9fVVJMfSAke0FQUF9ESVJ9CgppZiBbIC1kICIke0FQUF9ESVJ9L2RlcGxveSIgXTsgdGhlbgogIGVjaG8gIlJlcG9zaXRvcnkgY2xvbmVkLiBTdGFydGluZyBzZXJ2aWNlcy4uLiIKICAjIFVzZSB0aGUgZG9ja2VyIGNvbXBvc2UgcGx1Z2luLCBydW4gYXMgJ3VidW50dScgdXNlcgogICMgUnVuIGFzIHJvb3QgdG8gZW5zdXJlIHBlcm1pc3Npb25zIGFyZSBub3QgYW4gaXNzdWUgZHVyaW5nIGluaXRpYWwgc2V0dXAuCiAgIyBUaGUgJ3VidW50dScgdXNlciBjYW4gbWFuYWdlIGRvY2tlciBsYXRlciB0aGFua3MgdG8gdGhlICd1c2VybW9kJyBjb21tYW5kIGFib3ZlLgogICNkb2NrZXIgY29tcG9zZSAtZiAke0FQUF9ESVJ9L2RlcGxveS9kb2NrZXItY29tcG9zZS55bWwgdXAgLWQKICBlY2hvICJEb2NrZXIgQ29tcG9zZSBzZXJ2aWNlcyBzdGFydGVkLiIKZWxzZQogIGVjaG8gIkZhaWxlZCB0byBjbG9uZSByZXBvc2l0b3J5IG9yIGRvY2tlci1jb21wb3NlLnltbCBub3QgZm91bmQuIgpmaQoKZWNobyAiLS0tIENsb3VkLUluaXQgU2NyaXB0IEZpbmlzaGVkIFN1Y2Nlc3NmdWxseSAtLS0iCgojIFRoZSBkZXBsb3ltZW50IGl0c2VsZiAoY2xvbmluZyB0aGUgcmVwbyBhbmQgcnVubmluZyBkb2NrZXIgY29tcG9zZSkKIyB3aWxsIGJlIGhhbmRsZWQgYnkgdGhlIEdpdEh1YiBBY3Rpb25zIHBpcGVsaW5lLgoKIyAtLS0gNi4gSGVhbHRoY2hlY2sgLS0tCmVjaG8gIi0tLSBSdW5uaW5nIEhlYWx0aGNoZWNrIC0tLSIKCiMgVmVyaWZpY2Egc2UgbyBEb2NrZXIgZXN0w6EgcmVzcG9uZGVuZG8KaWYgZG9ja2VyIHBzID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXI6IE9LIgplbHNlCiAgICBlY2hvICLinYwgRG9ja2VyOiBGQUlMRUQiCiAgICBleGl0IDEKZmkKCiMgVmVyaWZpY2Egc2UgbyBDb21wb3NlIGVzdMOhIGluc3RhbGFkbwppZiBkb2NrZXIgY29tcG9zZSB2ZXJzaW9uID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXIgQ29tcG9zZTogT0siCmVsc2UKICAgIGVjaG8gIuKdjCBEb2NrZXIgQ29tcG9zZTogRkFJTEVEIgogICAgZXhpdCAxCmZpCgojIENyaWEgdW0gbWFyY2Fkb3IgZGUgc3VjZXNzbyBwYXJhIG8gc2V1IHBpcGVsaW5lIHNhYmVyIHF1ZSBhY2Fib3UKdG91Y2ggL3Zhci9sb2cvY2xvdWQtaW5pdC1kb25lCgplY2hvICItLS0gQ2xvdWQtSW5pdCBTY3JpcHQgRmluaXNoZWQgU3VjY2Vzc2Z1bGx5IGF0ICQoZGF0ZSkgLS0tIg=="
+        }
+      + private_ip                          = (known after apply)
+      + public_ip                           = (known after apply)
+      + region                              = (known after apply)
+      + security_attributes                 = (known after apply)
+      + security_attributes_state           = (known after apply)
+      + shape                               = "VM.Standard.E2.1.Micro"
+      + state                               = (known after apply)
+      + subnet_id                           = (known after apply)
+      + system_tags                         = (known after apply)
+      + time_created                        = (known after apply)
+      + time_maintenance_reboot_due         = (known after apply)
+
+      + agent_config (known after apply)
+
+      + availability_config (known after apply)
+
+      + create_vnic_details {
+          + assign_ipv6ip          = (known after apply)
+          + assign_public_ip       = "true"
+          + defined_tags           = (known after apply)
+          + display_name           = (known after apply)
+          + freeform_tags          = (known after apply)
+          + hostname_label         = (known after apply)
+          + nsg_ids                = [
+              + "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq",
+            ]
+          + private_ip             = (known after apply)
+          + private_ip_id          = (known after apply)
+          + security_attributes    = (known after apply)
+          + skip_source_dest_check = (known after apply)
+          + subnet_cidr            = (known after apply)
+          + subnet_id              = "ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq"
+          + vlan_id                = (known after apply)
+
+          + ipv6address_ipv6subnet_cidr_pair_details (known after apply)
+        }
+
+      + instance_options (known after apply)
+
+      + launch_options (known after apply)
+
+      + launch_volume_attachments (known after apply)
+
+      + licensing_configs (known after apply)
+
+      + placement_constraint_details (known after apply)
+
+      + platform_config (known after apply)
+
+      + preemptible_instance_config (known after apply)
+
+      + shape_config (known after apply)
+
+      + source_details {
+          + boot_volume_size_in_gbs = (known after apply)
+          + boot_volume_vpus_per_gb = (known after apply)
+          + source_id               = "ocid1.image.oc1.iad.aaaaaaaaxuoxbmbtrnnkm6n5zcjyu4ac6ocmdcxpdxr6s7ndrcfhroc5maiq"
+          + source_type             = "image"
+
+          + instance_source_image_filter_details (known after apply)
+        }
+    }
+
+Plan: 4 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + instance_public_ip    = (known after apply)
+  + ssh_command           = (sensitive value)
+module.compute.oci_core_instance.app_vm: Creating...
+oci_identity_dynamic_group.backend_dg: Creating...
+oci_identity_dynamic_group.backend_dg: Still creating... [00m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m00s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [02m00s elapsed]
+
+Error: 409-IdcsConversionError, Post request failed{"schemas":["urn:ietf:params:scim:api:messages:2.0:Error","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error"],"detail":"DynamicResourceGroup with the same displayName already exists.","status":"409","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error":{"messageId":"error.common.exception.duplicateResource"}}
+Suggestion: The resource is in a conflicted state. Please retry again or contact support for help with service: Identity Dynamic Group
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_dynamic_group 
+API Reference: https://docs.oracle.com/iaas/api/#/en/identity/20160918/DynamicGroup/CreateDynamicGroup 
+Request Target: POST https://identity.us-ashburn-1.oci.oraclecloud.com/20160918/dynamicGroups 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Identity Dynamic Group 
+Operation Name: CreateDynamicGroup 
+OPC request ID: 6ba8c1bfb66e49b5dea34770101b58a8/0279EDC9A3632C90409C036A4941445B/A0D0316572DAE82BDA5DA1A6DD01E8FF 
+
+
+  with oci_identity_dynamic_group.backend_dg,
+  on main.tf line 81, in resource "oci_identity_dynamic_group" "backend_dg":
+  81: resource "oci_identity_dynamic_group" "backend_dg" {
+
+
+Error: 404-NotAuthorizedOrNotFound, Authorization failed or requested resource not found.
+Suggestion: Either the resource has been deleted or service Core Instance need policy to access this resource. Policy reference: https://docs.oracle.com/en-us/iaas/Content/Identity/Reference/policyreference.htm
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.us-ashburn-1.oraclecloud.com/20160918/instances 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: f02525e22ab12288b2784c1d76461dc2/B77C440F5E9B0454C49B036A494144F6/490390A20C3FCC47EAA616CCFC3CF2F7 
+
+
+  with module.compute.oci_core_instance.app_vm,
+  on ../../modules/compute/main.tf line 10, in resource "oci_core_instance" "app_vm":
+  10: resource "oci_core_instance" "app_vm" {
+
+[2026-05-12 18:31:44] FALHA: Tentativa #4 falhou com código de saída 1.
+[2026-05-12 18:31:44] Aguardando 2 segundos antes da próxima tentativa...
+[2026-05-12 18:31:46] --- Tentativa #5 (AD: 1, Config: 1 OCPU, 1GB RAM, Shape: VM.Standard.E2.1.Micro) ---
+module.compute.data.oci_core_images.ubuntu: Reading...
+data.oci_objectstorage_namespace.ns: Reading...
+module.network.oci_core_vcn.main: Refreshing state... [id=ocid1.vcn.oc1.iad.amaaaaaa7xsqx3aaso7q5wmsjrtvmke3yrjwlawsgagdepbal43jvwv6i2tq]
+data.oci_identity_availability_domains.ads: Reading...
+data.oci_objectstorage_namespace.ns: Read complete after 0s [id=ObjectStorageNamespaceDataSource-2766122801]
+oci_objectstorage_bucket.insumopro_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-insumopro]
+oci_objectstorage_bucket.frontend_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket]
+data.oci_identity_availability_domains.ads: Read complete after 0s [id=IdentityAvailabilityDomainsDataSource-2766122801]
+module.compute.data.oci_core_images.ubuntu: Read complete after 0s [id=CoreImagesDataSource-3929395061]
+module.network.oci_core_network_security_group.app_nsg: Refreshing state... [id=ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq]
+module.network.oci_core_internet_gateway.gw: Refreshing state... [id=ocid1.internetgateway.oc1.iad.aaaaaaaaoflkhgsdzu2cpkemaaxoju7nhhxjkx2qbkgzotsywweqbzoj57oq]
+module.network.oci_core_network_security_group_security_rule.allow_ssh: Refreshing state... [id=D02556]
+module.network.oci_core_network_security_group_security_rule.allow_all_egress: Refreshing state... [id=82FC93]
+module.network.oci_core_network_security_group_security_rule.allow_web: Refreshing state... [id=0524DD]
+module.network.oci_core_route_table.main: Refreshing state... [id=ocid1.routetable.oc1.iad.aaaaaaaanzutbgxp377zpbbmzwmgmtg6cen2fbqydhpouekqmivbv5zb7tsq]
+module.network.oci_core_subnet.public: Refreshing state... [id=ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # oci_identity_dynamic_group.backend_dg will be created
+  + resource "oci_identity_dynamic_group" "backend_dg" {
+      + compartment_id = "ocid1.tenancy.oc1..aaaaaaaaxi6ah7g2j4vozp7dpp3zavhpb65e4xquysu2zxm67gvododkutjq"
+      + defined_tags   = (known after apply)
+      + description    = "Grupo para a VM acessar o Object Storage"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + matching_rule  = "ALL {instance.compartment.id = 'ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla', tag.Project.value = 'SaaS-Platform'}"
+      + name           = "saas-platform-backend-dg"
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+    }
+
+  # oci_identity_policy.backend_storage_policy will be created
+  + resource "oci_identity_policy" "backend_storage_policy" {
+      + ETag           = (known after apply)
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + defined_tags   = (known after apply)
+      + description    = "Permite a VM gerenciar objetos no bucket insumopro"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + lastUpdateETag = (known after apply)
+      + name           = "saas-platform-storage-policy"
+      + policyHash     = (known after apply)
+      + state          = (known after apply)
+      + statements     = [
+          + "Allow dynamic-group saas-platform-backend-dg to manage objects in compartment id ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla where target.bucket.name='saas-platform-insumopro'",
+        ]
+      + time_created   = (known after apply)
+      + version_date   = (known after apply)
+    }
+
+  # oci_objectstorage_object.frontend_index will be created
+  + resource "oci_objectstorage_object" "frontend_index" {
+      + bucket                     = "saas-platform-frontend-bucket"
+      + content                    = (known after apply)
+      + content_length             = (known after apply)
+      + content_md5                = (known after apply)
+      + content_type               = "text/html"
+      + delete_all_object_versions = false
+      + id                         = (known after apply)
+      + namespace                  = "iddg6xbyg1cs"
+      + object                     = "index.html"
+      + opc_sse_kms_key_id         = (known after apply)
+      + state                      = (known after apply)
+      + storage_tier               = (known after apply)
+      + version_id                 = (known after apply)
+      + work_request_id            = (known after apply)
+    }
+
+  # module.compute.oci_core_instance.app_vm will be created
+  + resource "oci_core_instance" "app_vm" {
+      + availability_domain                 = "nOoe:US-ASHBURN-AD-2"
+      + boot_volume_id                      = (known after apply)
+      + capacity_reservation_id             = (known after apply)
+      + compartment_id                      = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + compute_cluster_id                  = (known after apply)
+      + dedicated_vm_host_id                = (known after apply)
+      + defined_tags                        = (known after apply)
+      + display_name                        = "saas-platform-vm"
+      + extended_metadata                   = (known after apply)
+      + fault_domain                        = (known after apply)
+      + freeform_tags                       = {
+          + "ManagedBy" = "Terraform"
+          + "Project"   = "SaaS-Platform"
+        }
+      + hostname_label                      = (known after apply)
+      + id                                  = (known after apply)
+      + image                               = (known after apply)
+      + instance_configuration_id           = (known after apply)
+      + ipxe_script                         = (known after apply)
+      + is_ai_enterprise_enabled            = (known after apply)
+      + is_cross_numa_node                  = (known after apply)
+      + is_pv_encryption_in_transit_enabled = (known after apply)
+      + launch_mode                         = (known after apply)
+      + metadata                            = {
+          + "ssh_authorized_keys" = (sensitive value)
+          + "user_data"           = "IyEvYmluL2Jhc2gKc2V0IC1lCgojIDEuIEV2aXRhIHF1ZSBvIFVidW50dSBhYnJhIGphbmVsYXMgaW50ZXJhdGl2YXMgZHVyYW50ZSBvIGFwdCB1cGdyYWRlCmV4cG9ydCBERUJJQU5fRlJPTlRFTkQ9bm9uaW50ZXJhY3RpdmUKCiMgTG9nIGV2ZXJ5dGhpbmcgdG8gYSBmaWxlCmV4ZWMgPiA+KHRlZSAvdmFyL2xvZy9jbG91ZC1pbml0LW91dHB1dC5sb2d8bG9nZ2VyIC10IHVzZXItZGF0YSAtcyAyPi9kZXYvY29uc29sZSkgMj4mMQoKZWNobyAiLS0tIFN0YXJ0aW5nIENsb3VkLUluaXQgU2NyaXB0IC0tLSIKCmVjaG8gIi0tLSBGb3JjaW5nIGFwdCB0byB1c2UgSVB2NCAtLS0iCmVjaG8gJ0FjcXVpcmU6OkZvcmNlSVB2NCAidHJ1ZSI7JyB8IHRlZSAvZXRjL2FwdC9hcHQuY29uZi5kLzk5Zm9yY2UtaXB2NAoKIyBNYW51YWxseSBzZXQgYSBwdWJsaWMgRE5TIHNlcnZlciBhcyBhIGZhbGxiYWNrIGZvciB0aGlzIHNjcmlwdCdzIHNlc3Npb24uCiMgVGhpcyBpcyBhIHBvd2VyZnVsIGRlYnVnZ2luZyBzdGVwIHRvIGJ5cGFzcyBwb3RlbnRpYWwgVkNOIEROUyBpc3N1ZXMuCmVjaG8gIi0tLSBUZW1wb3JhcmlseSBzZXR0aW5nIHB1YmxpYyBETlMgLS0tIgplY2hvICJuYW1lc2VydmVyIDguOC44LjgiIHwgdGVlIC9ldGMvcmVzb2x2LmNvbmYgPiAvZGV2L251bGwKCiMgV2FpdCBmb3IgbmV0d29yayBhbmQgRE5TIHRvIGJlIHJlYWR5LiBUaGlzIHByZXZlbnRzIGZhaWx1cmVzIG9uIGluaXRpYWwgYm9vdC4KZWNobyAiLS0tIFdhaXRpbmcgZm9yIG5ldHdvcmsgYW5kIEROUyByZXNvbHV0aW9uIC0tLSIKdW50aWwgcGluZyAtYyAxIGdvb2dsZS5jb20gJj4vZGV2L251bGw7IGRvCiAgICBlY2hvICJOZXR3b3JrIG5vdCByZWFkeSwgd2FpdGluZyA1IHNlY29uZHMuLi4iCiAgICBzbGVlcCA1CmRvbmUKZWNobyAiLS0tIE5ldHdvcmsgYW5kIEROUyBhcmUgdXAgLS0tIgoKIyAyLiBVcGRhdGUgZSBVcGdyYWRlIGNvbSBmbGFncyBxdWUgZm9yw6dhbSBvIHVzbyBkYXMgY29uZmlndXJhw6fDtWVzIGF0dWFpcyAoc2VtIHRyYXZhcikKYXB0LWdldCB1cGRhdGUKYXB0LWdldCB1cGdyYWRlIC15IC1vIERwa2c6Ok9wdGlvbnM6Oj0iLS1mb3JjZS1jb25mb2xkIgoKIyAzLiBJbnN0YWxhw6fDo28gZGUgZmVycmFtZW50YXMgYsOhc2ljYXMKYXB0LWdldCBpbnN0YWxsIC15IGFwdC10cmFuc3BvcnQtaHR0cHMgY2EtY2VydGlmaWNhdGVzIGN1cmwgc29mdHdhcmUtcHJvcGVydGllcy1jb21tb24gZ2l0CgoKIyAtLS0gQ3JlYXRlIGFuZCBlbmFibGUgYSAyR0Igc3dhcCBmaWxlIC0tLQplY2hvICJDcmVhdGluZyAyR0Igc3dhcCBmaWxlLi4uIgpmYWxsb2NhdGUgLWwgMkcgL3N3YXBmaWxlCmNobW9kIDYwMCAvc3dhcGZpbGUKbWtzd2FwIC9zd2FwZmlsZQpzd2Fwb24gL3N3YXBmaWxlCiMgTWFrZSB0aGUgc3dhcCBmaWxlIHBlcm1hbmVudAplY2hvICcvc3dhcGZpbGUgbm9uZSBzd2FwIHN3IDAgMCcgfCB0ZWUgLWEgL2V0Yy9mc3RhYgplY2hvICJTd2FwIGZpbGUgY3JlYXRlZCBhbmQgZW5hYmxlZC4iCgojIC0tLSBSZXN0YW50ZSBkbyBzZXUgc2NyaXB0IGRlIERvY2tlciAtLS0KZWNobyAiLS0tIFJ1bm5pbmcgbmV0d29yayBkaWFnbm9zdGljcyBiZWZvcmUgRG9ja2VyIGluc3RhbGwgLS0tIgplY2hvICItLS0gVGVzdGluZyBjb25uZWN0aW9uIHRvIGRvd25sb2FkLmRvY2tlci5jb206NDQzIHdpdGggdmVyYm9zZSBvdXRwdXQgLS0tIgpjdXJsIC12IGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbQplY2hvICItLS0gRGlhZ25vc3RpY3MgZmluaXNoZWQuIFRoZSBjb21tYW5kIGFib3ZlIHNob3VsZCBzaG93IHRoZSBjb25uZWN0aW9uIGF0dGVtcHQuIC0tLSIKCmVjaG8gIi0tLSBJbnN0YWxsaW5nIERvY2tlciAtLS0iCiMgVXNlIC9ldGMvYXB0L2tleXJpbmdzIChwYWRyw6NvIG1vZGVybm8gZG8gRG9ja2VyKSBwYXJhIGV2aXRhciBhdmlzb3MgZGUgc2VndXJhbsOnYQpta2RpciAtcCAvZXRjL2FwdC9rZXlyaW5ncwpjdXJsIC1mc1NMIGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbS9saW51eC91YnVudHUvZ3BnIHwgZ3BnIC0tZGVhcm1vciAtbyAvZXRjL2FwdC9rZXlyaW5ncy9kb2NrZXItYXJjaGl2ZS1rZXlyaW5nLmdwZwoKZWNobyAiZGViIFthcmNoPSQoZHBrZyAtLXByaW50LWFyY2hpdGVjdHVyZSkgc2lnbmVkLWJ5PS9ldGMvYXB0L2tleXJpbmdzL2RvY2tlci1hcmNoaXZlLWtleXJpbmcuZ3BnXSBodHRwczovL2Rvd25sb2FkLmRvY2tlci5jb20vbGludXgvdWJ1bnR1ICQobHNiX3JlbGVhc2UgLWNzKSBzdGFibGUiIHwgdGVlIC9ldGMvYXB0L3NvdXJjZXMubGlzdC5kL2RvY2tlci5saXN0ID4gL2Rldi9udWxsCgphcHQtZ2V0IHVwZGF0ZQphcHQtZ2V0IGluc3RhbGwgLXkgZG9ja2VyLWNlIGRvY2tlci1jZS1jbGkgY29udGFpbmVyZC5pbwoKIyBBZGQgdWJ1bnR1IHVzZXIgdG8gZG9ja2VyIGdyb3VwCnVzZXJtb2QgLWFHIGRvY2tlciB1YnVudHUKCgojIDMuIEluc3RhbGwgRG9ja2VyIENvbXBvc2UgdjIKZWNobyAiLS0tIEluc3RhbGxpbmcgRG9ja2VyIENvbXBvc2UgLS0tIgpET0NLRVJfQ09NUE9TRV9WRVJTSU9OPSJ2Mi4yNC42IiAjIFVzZSBhIHNwZWNpZmljIHZlcnNpb24gZm9yIHN0YWJpbGl0eQpta2RpciAtcCAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMKY3VybCAtU0wgImh0dHBzOi8vZ2l0aHViLmNvbS9kb2NrZXIvY29tcG9zZS9yZWxlYXNlcy9kb3dubG9hZC8ke0RPQ0tFUl9DT01QT1NFX1ZFUlNJT059L2RvY2tlci1jb21wb3NlLWxpbnV4LSQodW5hbWUgLW0pIiAtbyAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMvZG9ja2VyLWNvbXBvc2UKY2htb2QgK3ggL3Vzci9sb2NhbC9saWIvZG9ja2VyL2NsaS1wbHVnaW5zL2RvY2tlci1jb21wb3NlCgojIFZlcmlmeSBpbnN0YWxsYXRpb25zCmRvY2tlciAtLXZlcnNpb24KZG9ja2VyIGNvbXBvc2UgdmVyc2lvbgoKIyA0LiBTZXR1cCBBcHBsaWNhdGlvbiBEaXJlY3RvcnkKZWNobyAiLS0tIFNldHRpbmcgdXAgYXBwbGljYXRpb24gZGlyZWN0b3J5IC0tLSIKQVBQX0RJUj0iL29wdC9zYWFzLXBsYXRmb3JtIgpSRVBPX1VSTD0iaHR0cHM6Ly9naXRodWIuY29tL0FsemlzL29jaS1zYWFzLXBsYXRmb3JtLXYyLmdpdCIgIyA8LS0gQ0hBTkdFIFRISVMKCm1rZGlyIC1wICR7QVBQX0RJUn0KY2hvd24gLVIgdWJ1bnR1OnVidW50dSAke0FQUF9ESVJ9CgojIFdlIHdpbGwgY2xvbmUgdGhlIHJlcG8gYXMgdGhlICd1YnVudHUnIHVzZXIgZHVyaW5nIHRoZSBmaXJzdCBkZXBsb3kKIyBGb3Igbm93LCB0aGUgZGlyZWN0b3J5IGlzIHJlYWR5LgoKIyA1LiBFbmFibGUgRG9ja2VyIHRvIHN0YXJ0IG9uIGJvb3QKc3lzdGVtY3RsIGVuYWJsZSBkb2NrZXIKCiMgQ2xvbmUgdGhlIHJlcG9zaXRvcnkgYXMgdGhlICd1YnVudHUnIHVzZXIKc3VkbyAtdSB1YnVudHUgZ2l0IGNsb25lICR7R0lUX1JFUE9fVVJMfSAke0FQUF9ESVJ9CgppZiBbIC1kICIke0FQUF9ESVJ9L2RlcGxveSIgXTsgdGhlbgogIGVjaG8gIlJlcG9zaXRvcnkgY2xvbmVkLiBTdGFydGluZyBzZXJ2aWNlcy4uLiIKICAjIFVzZSB0aGUgZG9ja2VyIGNvbXBvc2UgcGx1Z2luLCBydW4gYXMgJ3VidW50dScgdXNlcgogICMgUnVuIGFzIHJvb3QgdG8gZW5zdXJlIHBlcm1pc3Npb25zIGFyZSBub3QgYW4gaXNzdWUgZHVyaW5nIGluaXRpYWwgc2V0dXAuCiAgIyBUaGUgJ3VidW50dScgdXNlciBjYW4gbWFuYWdlIGRvY2tlciBsYXRlciB0aGFua3MgdG8gdGhlICd1c2VybW9kJyBjb21tYW5kIGFib3ZlLgogICNkb2NrZXIgY29tcG9zZSAtZiAke0FQUF9ESVJ9L2RlcGxveS9kb2NrZXItY29tcG9zZS55bWwgdXAgLWQKICBlY2hvICJEb2NrZXIgQ29tcG9zZSBzZXJ2aWNlcyBzdGFydGVkLiIKZWxzZQogIGVjaG8gIkZhaWxlZCB0byBjbG9uZSByZXBvc2l0b3J5IG9yIGRvY2tlci1jb21wb3NlLnltbCBub3QgZm91bmQuIgpmaQoKZWNobyAiLS0tIENsb3VkLUluaXQgU2NyaXB0IEZpbmlzaGVkIFN1Y2Nlc3NmdWxseSAtLS0iCgojIFRoZSBkZXBsb3ltZW50IGl0c2VsZiAoY2xvbmluZyB0aGUgcmVwbyBhbmQgcnVubmluZyBkb2NrZXIgY29tcG9zZSkKIyB3aWxsIGJlIGhhbmRsZWQgYnkgdGhlIEdpdEh1YiBBY3Rpb25zIHBpcGVsaW5lLgoKIyAtLS0gNi4gSGVhbHRoY2hlY2sgLS0tCmVjaG8gIi0tLSBSdW5uaW5nIEhlYWx0aGNoZWNrIC0tLSIKCiMgVmVyaWZpY2Egc2UgbyBEb2NrZXIgZXN0w6EgcmVzcG9uZGVuZG8KaWYgZG9ja2VyIHBzID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXI6IE9LIgplbHNlCiAgICBlY2hvICLinYwgRG9ja2VyOiBGQUlMRUQiCiAgICBleGl0IDEKZmkKCiMgVmVyaWZpY2Egc2UgbyBDb21wb3NlIGVzdMOhIGluc3RhbGFkbwppZiBkb2NrZXIgY29tcG9zZSB2ZXJzaW9uID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXIgQ29tcG9zZTogT0siCmVsc2UKICAgIGVjaG8gIuKdjCBEb2NrZXIgQ29tcG9zZTogRkFJTEVEIgogICAgZXhpdCAxCmZpCgojIENyaWEgdW0gbWFyY2Fkb3IgZGUgc3VjZXNzbyBwYXJhIG8gc2V1IHBpcGVsaW5lIHNhYmVyIHF1ZSBhY2Fib3UKdG91Y2ggL3Zhci9sb2cvY2xvdWQtaW5pdC1kb25lCgplY2hvICItLS0gQ2xvdWQtSW5pdCBTY3JpcHQgRmluaXNoZWQgU3VjY2Vzc2Z1bGx5IGF0ICQoZGF0ZSkgLS0tIg=="
+        }
+      + private_ip                          = (known after apply)
+      + public_ip                           = (known after apply)
+      + region                              = (known after apply)
+      + security_attributes                 = (known after apply)
+      + security_attributes_state           = (known after apply)
+      + shape                               = "VM.Standard.E2.1.Micro"
+      + state                               = (known after apply)
+      + subnet_id                           = (known after apply)
+      + system_tags                         = (known after apply)
+      + time_created                        = (known after apply)
+      + time_maintenance_reboot_due         = (known after apply)
+
+      + agent_config (known after apply)
+
+      + availability_config (known after apply)
+
+      + create_vnic_details {
+          + assign_ipv6ip          = (known after apply)
+          + assign_public_ip       = "true"
+          + defined_tags           = (known after apply)
+          + display_name           = (known after apply)
+          + freeform_tags          = (known after apply)
+          + hostname_label         = (known after apply)
+          + nsg_ids                = [
+              + "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq",
+            ]
+          + private_ip             = (known after apply)
+          + private_ip_id          = (known after apply)
+          + security_attributes    = (known after apply)
+          + skip_source_dest_check = (known after apply)
+          + subnet_cidr            = (known after apply)
+          + subnet_id              = "ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq"
+          + vlan_id                = (known after apply)
+
+          + ipv6address_ipv6subnet_cidr_pair_details (known after apply)
+        }
+
+      + instance_options (known after apply)
+
+      + launch_options (known after apply)
+
+      + launch_volume_attachments (known after apply)
+
+      + licensing_configs (known after apply)
+
+      + placement_constraint_details (known after apply)
+
+      + platform_config (known after apply)
+
+      + preemptible_instance_config (known after apply)
+
+      + shape_config (known after apply)
+
+      + source_details {
+          + boot_volume_size_in_gbs = (known after apply)
+          + boot_volume_vpus_per_gb = (known after apply)
+          + source_id               = "ocid1.image.oc1.iad.aaaaaaaaxuoxbmbtrnnkm6n5zcjyu4ac6ocmdcxpdxr6s7ndrcfhroc5maiq"
+          + source_type             = "image"
+
+          + instance_source_image_filter_details (known after apply)
+        }
+    }
+
+Plan: 4 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + instance_public_ip    = (known after apply)
+  + ssh_command           = (sensitive value)
+oci_identity_dynamic_group.backend_dg: Creating...
+module.compute.oci_core_instance.app_vm: Creating...
+oci_identity_dynamic_group.backend_dg: Still creating... [00m10s elapsed]
+module.compute.oci_core_instance.app_vm: Still creating... [00m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m20s elapsed]
+module.compute.oci_core_instance.app_vm: Still creating... [00m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m30s elapsed]
+module.compute.oci_core_instance.app_vm: Still creating... [00m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m40s elapsed]
+module.compute.oci_core_instance.app_vm: Still creating... [00m40s elapsed]
+module.compute.oci_core_instance.app_vm: Creation complete after 41s [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac334ukuwsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa]
+oci_objectstorage_object.frontend_index: Creating...
+oci_objectstorage_object.frontend_index: Creation complete after 1s [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket/o/index.html]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m00s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [02m00s elapsed]
+
+Error: 409-IdcsConversionError, Post request failed{"schemas":["urn:ietf:params:scim:api:messages:2.0:Error","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error"],"detail":"DynamicResourceGroup with the same displayName already exists.","status":"409","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error":{"messageId":"error.common.exception.duplicateResource"}}
+Suggestion: The resource is in a conflicted state. Please retry again or contact support for help with service: Identity Dynamic Group
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_dynamic_group 
+API Reference: https://docs.oracle.com/iaas/api/#/en/identity/20160918/DynamicGroup/CreateDynamicGroup 
+Request Target: POST https://identity.us-ashburn-1.oci.oraclecloud.com/20160918/dynamicGroups 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Identity Dynamic Group 
+Operation Name: CreateDynamicGroup 
+OPC request ID: 770e4fae967b5bcaa66985e06e945501/B1516463FF10A6D2C59C036A494144E8/ED47E1C0F24D3C24E44393AA52B84F39 
+
+
+  with oci_identity_dynamic_group.backend_dg,
+  on main.tf line 81, in resource "oci_identity_dynamic_group" "backend_dg":
+  81: resource "oci_identity_dynamic_group" "backend_dg" {
+
+[2026-05-12 18:33:57] FALHA: Tentativa #5 falhou com código de saída 1.
+[2026-05-12 18:33:58] Aguardando 2 segundos antes da próxima tentativa...
+[2026-05-12 18:34:00] --- Tentativa #6 (AD: 2, Config: 1 OCPU, 1GB RAM, Shape: VM.Standard.E2.1.Micro) ---
+data.oci_objectstorage_namespace.ns: Reading...
+data.oci_identity_availability_domains.ads: Reading...
+module.compute.data.oci_core_images.ubuntu: Reading...
+module.network.oci_core_vcn.main: Refreshing state... [id=ocid1.vcn.oc1.iad.amaaaaaa7xsqx3aaso7q5wmsjrtvmke3yrjwlawsgagdepbal43jvwv6i2tq]
+data.oci_objectstorage_namespace.ns: Read complete after 1s [id=ObjectStorageNamespaceDataSource-2766122801]
+oci_objectstorage_bucket.insumopro_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-insumopro]
+oci_objectstorage_bucket.frontend_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket]
+data.oci_identity_availability_domains.ads: Read complete after 1s [id=IdentityAvailabilityDomainsDataSource-2766122801]
+module.compute.data.oci_core_images.ubuntu: Read complete after 1s [id=CoreImagesDataSource-3929395061]
+module.network.oci_core_internet_gateway.gw: Refreshing state... [id=ocid1.internetgateway.oc1.iad.aaaaaaaaoflkhgsdzu2cpkemaaxoju7nhhxjkx2qbkgzotsywweqbzoj57oq]
+module.network.oci_core_network_security_group.app_nsg: Refreshing state... [id=ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq]
+module.network.oci_core_route_table.main: Refreshing state... [id=ocid1.routetable.oc1.iad.aaaaaaaanzutbgxp377zpbbmzwmgmtg6cen2fbqydhpouekqmivbv5zb7tsq]
+module.network.oci_core_network_security_group_security_rule.allow_web: Refreshing state... [id=0524DD]
+module.network.oci_core_network_security_group_security_rule.allow_all_egress: Refreshing state... [id=82FC93]
+module.network.oci_core_network_security_group_security_rule.allow_ssh: Refreshing state... [id=D02556]
+module.network.oci_core_subnet.public: Refreshing state... [id=ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq]
+module.compute.oci_core_instance.app_vm: Refreshing state... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac334ukuwsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa]
+oci_objectstorage_object.frontend_index: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket/o/index.html]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # oci_identity_dynamic_group.backend_dg will be created
+  + resource "oci_identity_dynamic_group" "backend_dg" {
+      + compartment_id = "ocid1.tenancy.oc1..aaaaaaaaxi6ah7g2j4vozp7dpp3zavhpb65e4xquysu2zxm67gvododkutjq"
+      + defined_tags   = (known after apply)
+      + description    = "Grupo para a VM acessar o Object Storage"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + matching_rule  = "ALL {instance.compartment.id = 'ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla', tag.Project.value = 'SaaS-Platform'}"
+      + name           = "saas-platform-backend-dg"
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+    }
+
+  # oci_identity_policy.backend_storage_policy will be created
+  + resource "oci_identity_policy" "backend_storage_policy" {
+      + ETag           = (known after apply)
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + defined_tags   = (known after apply)
+      + description    = "Permite a VM gerenciar objetos no bucket insumopro"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + lastUpdateETag = (known after apply)
+      + name           = "saas-platform-storage-policy"
+      + policyHash     = (known after apply)
+      + state          = (known after apply)
+      + statements     = [
+          + "Allow dynamic-group saas-platform-backend-dg to manage objects in compartment id ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla where target.bucket.name='saas-platform-insumopro'",
+        ]
+      + time_created   = (known after apply)
+      + version_date   = (known after apply)
+    }
+
+  # oci_objectstorage_object.frontend_index must be replaced
+-/+ resource "oci_objectstorage_object" "frontend_index" {
+      ~ content                    = "e4e618aea266b81b6ca0030760f454f3" -> (known after apply) # forces replacement
+      ~ content_length             = "1364" -> (known after apply)
+      ~ content_md5                = "5OYYrqJmuBtsoAMHYPRU8w==" -> (known after apply)
+      ~ id                         = "n/iddg6xbyg1cs/b/saas-platform-frontend-bucket/o/index.html" -> (known after apply)
+      - metadata                   = {} -> null
+      + opc_sse_kms_key_id         = (known after apply)
+      ~ state                      = "COMPLETED" -> (known after apply)
+      ~ storage_tier               = "Standard" -> (known after apply)
+      ~ version_id                 = "aedc96b1-8bdd-4dc8-8437-7a9f9639563d" -> (known after apply)
+      + work_request_id            = (known after apply)
+        # (5 unchanged attributes hidden)
+    }
+
+  # module.compute.oci_core_instance.app_vm must be replaced
+-/+ resource "oci_core_instance" "app_vm" {
+      ~ availability_domain                 = "nOoe:US-ASHBURN-AD-2" -> "nOoe:US-ASHBURN-AD-3" # forces replacement
+      ~ boot_volume_id                      = "ocid1.bootvolume.oc1.iad.abuwcljt5crr5z3nvqhxwoxpom64mj36gop7ayt3sjgkeuyau2kvew2d2mwq" -> (known after apply)
+      + capacity_reservation_id             = (known after apply)
+      + compute_cluster_id                  = (known after apply)
+      + dedicated_vm_host_id                = (known after apply)
+      ~ defined_tags                        = {
+          - "Oracle-Tags.CreatedBy" = "default/sra.asystem@gmail.com"
+          - "Oracle-Tags.CreatedOn" = "2026-05-12T21:31:53.506Z"
+        } -> (known after apply)
+      ~ extended_metadata                   = {} -> (known after apply)
+      ~ fault_domain                        = "FAULT-DOMAIN-1" -> (known after apply)
+      ~ hostname_label                      = "saas-platform-vm" -> (known after apply)
+      ~ id                                  = "ocid1.instance.oc1.iad.anuwcljt7xsqx3ac334ukuwsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa" -> (known after apply)
+      ~ image                               = "ocid1.image.oc1.iad.aaaaaaaaxuoxbmbtrnnkm6n5zcjyu4ac6ocmdcxpdxr6s7ndrcfhroc5maiq" -> (known after apply)
+      + instance_configuration_id           = (known after apply)
+      + ipxe_script                         = (known after apply)
+      + is_ai_enterprise_enabled            = (known after apply)
+      ~ is_cross_numa_node                  = false -> (known after apply)
+      + is_pv_encryption_in_transit_enabled = (known after apply)
+      ~ launch_mode                         = "PARAVIRTUALIZED" -> (known after apply)
+      ~ private_ip                          = "10.0.1.184" -> (known after apply)
+      ~ public_ip                           = "129.80.208.119" -> (known after apply)
+      ~ region                              = "iad" -> (known after apply)
+      ~ security_attributes                 = {} -> (known after apply)
+      ~ security_attributes_state           = "STABLE" -> (known after apply)
+      ~ state                               = "RUNNING" -> (known after apply)
+      ~ subnet_id                           = "ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq" -> (known after apply)
+      ~ system_tags                         = {
+          - "orcl-cloud.free-tier-retained" = "true"
+        } -> (known after apply)
+      ~ time_created                        = "2026-05-12 21:31:54.164 +0000 UTC" -> (known after apply)
+      + time_maintenance_reboot_due         = (known after apply)
+        # (5 unchanged attributes hidden)
+
+      ~ agent_config (known after apply)
+      - agent_config {
+          - are_all_plugins_disabled = false -> null
+          - is_management_disabled   = false -> null
+          - is_monitoring_disabled   = false -> null
+        }
+
+      ~ availability_config (known after apply)
+      - availability_config {
+          - is_live_migration_preferred = false -> null
+          - recovery_action             = "RESTORE_INSTANCE" -> null
+        }
+
+      ~ create_vnic_details {
+          ~ assign_ipv6ip             = false -> (known after apply)
+          - assign_private_dns_record = false -> null
+          ~ defined_tags              = {
+              - "Oracle-Tags.CreatedBy" = "default/sra.asystem@gmail.com"
+              - "Oracle-Tags.CreatedOn" = "2026-05-12T21:31:53.634Z"
+            } -> (known after apply)
+          ~ display_name              = "saas-platform-vm" -> (known after apply)
+          ~ freeform_tags             = {
+              - "ManagedBy" = "Terraform"
+              - "Project"   = "SaaS-Platform"
+            } -> (known after apply)
+          ~ hostname_label            = "saas-platform-vm" -> (known after apply)
+          ~ private_ip                = "10.0.1.184" -> (known after apply)
+          + private_ip_id             = (known after apply)
+          ~ security_attributes       = {} -> (known after apply)
+          ~ skip_source_dest_check    = false -> (known after apply)
+          + subnet_cidr               = (known after apply)
+          + vlan_id                   = (known after apply)
+            # (3 unchanged attributes hidden)
+
+          ~ ipv6address_ipv6subnet_cidr_pair_details (known after apply)
+        }
+
+      ~ instance_options (known after apply)
+      - instance_options {
+          - are_legacy_imds_endpoints_disabled = false -> null
+        }
+
+      ~ launch_options (known after apply)
+      - launch_options {
+          - boot_volume_type                    = "PARAVIRTUALIZED" -> null
+          - firmware                            = "UEFI_64" -> null
+          - is_consistent_volume_naming_enabled = true -> null
+          - is_pv_encryption_in_transit_enabled = false -> null
+          - network_type                        = "PARAVIRTUALIZED" -> null
+          - remote_data_volume_type             = "PARAVIRTUALIZED" -> null
+        }
+
+      ~ launch_volume_attachments (known after apply)
+
+      ~ licensing_configs (known after apply)
+
+      ~ placement_constraint_details (known after apply)
+
+      ~ platform_config (known after apply)
+
+      ~ preemptible_instance_config (known after apply)
+
+      ~ shape_config (known after apply)
+      - shape_config {
+          - gpus                          = 0 -> null
+          - local_disks                   = 0 -> null
+          - local_disks_total_size_in_gbs = 0 -> null
+          - max_vnic_attachments          = 1 -> null
+          - memory_in_gbs                 = 1 -> null
+          - networking_bandwidth_in_gbps  = 0.47999998927116394 -> null
+          - nvmes                         = 0 -> null
+          - ocpus                         = 1 -> null
+          - processor_description         = "2.0 GHz AMD EPYC™ 7551 (Naples)" -> null
+          - vcpus                         = 2 -> null
+            # (4 unchanged attributes hidden)
+        }
+
+      ~ source_details {
+          ~ boot_volume_size_in_gbs         = "47" -> (known after apply)
+          ~ boot_volume_vpus_per_gb         = "10" -> (known after apply)
+          - is_preserve_boot_volume_enabled = false -> null
+            # (3 unchanged attributes hidden)
+
+          ~ instance_source_image_filter_details (known after apply)
+        }
+    }
+
+Plan: 4 to add, 0 to change, 2 to destroy.
+
+Changes to Outputs:
+  ~ instance_public_ip    = "129.80.208.119" -> (known after apply)
+  ~ ssh_command           = (sensitive value)
+oci_identity_dynamic_group.backend_dg: Creating...
+oci_objectstorage_object.frontend_index: Destroying... [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket/o/index.html]
+oci_objectstorage_object.frontend_index: Destruction complete after 1s
+module.compute.oci_core_instance.app_vm: Destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac334ukuwsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m10s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 00m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m20s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 00m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m30s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 00m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m40s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 00m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m50s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 00m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m00s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 01m00s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m10s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 01m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m20s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 01m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m30s elapsed]
+module.compute.oci_core_instance.app_vm: Still destroying... [id=ocid1.instance.oc1.iad.anuwcljt7xsqx3ac...wsktre3wgcdn2x3szxmkujrdawjj2prgzl7dxa, 01m30s elapsed]
+module.compute.oci_core_instance.app_vm: Destruction complete after 1m30s
+module.compute.oci_core_instance.app_vm: Creating...
+oci_identity_dynamic_group.backend_dg: Still creating... [01m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [02m00s elapsed]
+
+Error: 409-IdcsConversionError, Post request failed{"schemas":["urn:ietf:params:scim:api:messages:2.0:Error","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error"],"detail":"DynamicResourceGroup with the same displayName already exists.","status":"409","urn:ietf:params:scim:api:oracle:idcs:extension:messages:Error":{"messageId":"error.common.exception.duplicateResource"}}
+Suggestion: The resource is in a conflicted state. Please retry again or contact support for help with service: Identity Dynamic Group
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_dynamic_group 
+API Reference: https://docs.oracle.com/iaas/api/#/en/identity/20160918/DynamicGroup/CreateDynamicGroup 
+Request Target: POST https://identity.us-ashburn-1.oci.oraclecloud.com/20160918/dynamicGroups 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Identity Dynamic Group 
+Operation Name: CreateDynamicGroup 
+OPC request ID: 91801bbe76649cd79f3d7e9742ed03bf/DA10AD9BC4FF6A154F9D036A49414446/BF95E939A4CF6041C0BAE135D9FC0938 
+
+
+  with oci_identity_dynamic_group.backend_dg,
+  on main.tf line 81, in resource "oci_identity_dynamic_group" "backend_dg":
+  81: resource "oci_identity_dynamic_group" "backend_dg" {
+
+
+Error: 404-NotAuthorizedOrNotFound, Authorization failed or requested resource not found.
+Suggestion: Either the resource has been deleted or service Core Instance need policy to access this resource. Policy reference: https://docs.oracle.com/en-us/iaas/Content/Identity/Reference/policyreference.htm
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.us-ashburn-1.oraclecloud.com/20160918/instances 
+Provider version: 8.13.0, released on 2026-05-05.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: 1e66f2c3d96d66e90acdf6c61207e969/68745BD498E93568309D036A4941441A/7BC459245A07183CEFE89AE22A137E69 
+
+
+  with module.compute.oci_core_instance.app_vm,
+  on ../../modules/compute/main.tf line 10, in resource "oci_core_instance" "app_vm":
+  10: resource "oci_core_instance" "app_vm" {
+
+[2026-05-12 18:36:15] FALHA: Tentativa #6 falhou com código de saída 1.
+[2026-05-12 18:36:15] Aguardando 2 segundos antes da próxima tentativa...
+[2026-05-12 18:36:17] Todas as combinações falharam neste ciclo. Aguardando 10 segundos para reiniciar.
+[2026-05-12 18:36:28] --- Tentativa #7 (AD: 0, Config: 1 OCPU, 1GB RAM, Shape: VM.Standard.E2.1.Micro) ---
+data.oci_identity_availability_domains.ads: Reading...
+module.compute.data.oci_core_images.ubuntu: Reading...
+data.oci_objectstorage_namespace.ns: Reading...
+module.network.oci_core_vcn.main: Refreshing state... [id=ocid1.vcn.oc1.iad.amaaaaaa7xsqx3aaso7q5wmsjrtvmke3yrjwlawsgagdepbal43jvwv6i2tq]
+data.oci_objectstorage_namespace.ns: Read complete after 1s [id=ObjectStorageNamespaceDataSource-2766122801]
+oci_objectstorage_bucket.frontend_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-frontend-bucket]
+oci_objectstorage_bucket.insumopro_bucket: Refreshing state... [id=n/iddg6xbyg1cs/b/saas-platform-insumopro]
+data.oci_identity_availability_domains.ads: Read complete after 1s [id=IdentityAvailabilityDomainsDataSource-2766122801]
+module.compute.data.oci_core_images.ubuntu: Read complete after 1s [id=CoreImagesDataSource-3929395061]
+module.network.oci_core_network_security_group.app_nsg: Refreshing state... [id=ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq]
+module.network.oci_core_internet_gateway.gw: Refreshing state... [id=ocid1.internetgateway.oc1.iad.aaaaaaaaoflkhgsdzu2cpkemaaxoju7nhhxjkx2qbkgzotsywweqbzoj57oq]
+module.network.oci_core_route_table.main: Refreshing state... [id=ocid1.routetable.oc1.iad.aaaaaaaanzutbgxp377zpbbmzwmgmtg6cen2fbqydhpouekqmivbv5zb7tsq]
+module.network.oci_core_network_security_group_security_rule.allow_web: Refreshing state... [id=0524DD]
+module.network.oci_core_network_security_group_security_rule.allow_ssh: Refreshing state... [id=D02556]
+module.network.oci_core_network_security_group_security_rule.allow_all_egress: Refreshing state... [id=82FC93]
+module.network.oci_core_subnet.public: Refreshing state... [id=ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # oci_identity_dynamic_group.backend_dg will be created
+  + resource "oci_identity_dynamic_group" "backend_dg" {
+      + compartment_id = "ocid1.tenancy.oc1..aaaaaaaaxi6ah7g2j4vozp7dpp3zavhpb65e4xquysu2zxm67gvododkutjq"
+      + defined_tags   = (known after apply)
+      + description    = "Grupo para a VM acessar o Object Storage"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + matching_rule  = "ALL {instance.compartment.id = 'ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla', tag.Project.value = 'SaaS-Platform'}"
+      + name           = "saas-platform-backend-dg"
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+    }
+
+  # oci_identity_policy.backend_storage_policy will be created
+  + resource "oci_identity_policy" "backend_storage_policy" {
+      + ETag           = (known after apply)
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + defined_tags   = (known after apply)
+      + description    = "Permite a VM gerenciar objetos no bucket insumopro"
+      + freeform_tags  = (known after apply)
+      + id             = (known after apply)
+      + inactive_state = (known after apply)
+      + lastUpdateETag = (known after apply)
+      + name           = "saas-platform-storage-policy"
+      + policyHash     = (known after apply)
+      + state          = (known after apply)
+      + statements     = [
+          + "Allow dynamic-group saas-platform-backend-dg to manage objects in compartment id ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla where target.bucket.name='saas-platform-insumopro'",
+        ]
+      + time_created   = (known after apply)
+      + version_date   = (known after apply)
+    }
+
+  # oci_objectstorage_object.frontend_index will be created
+  + resource "oci_objectstorage_object" "frontend_index" {
+      + bucket                     = "saas-platform-frontend-bucket"
+      + content                    = (known after apply)
+      + content_length             = (known after apply)
+      + content_md5                = (known after apply)
+      + content_type               = "text/html"
+      + delete_all_object_versions = false
+      + id                         = (known after apply)
+      + namespace                  = "iddg6xbyg1cs"
+      + object                     = "index.html"
+      + opc_sse_kms_key_id         = (known after apply)
+      + state                      = (known after apply)
+      + storage_tier               = (known after apply)
+      + version_id                 = (known after apply)
+      + work_request_id            = (known after apply)
+    }
+
+  # module.compute.oci_core_instance.app_vm will be created
+  + resource "oci_core_instance" "app_vm" {
+      + availability_domain                 = "nOoe:US-ASHBURN-AD-1"
+      + boot_volume_id                      = (known after apply)
+      + capacity_reservation_id             = (known after apply)
+      + compartment_id                      = "ocid1.compartment.oc1..aaaaaaaalurelhalmatiy6epqelfmi7dltvg5vungaoqlg7ci7ga2qw4rqla"
+      + compute_cluster_id                  = (known after apply)
+      + dedicated_vm_host_id                = (known after apply)
+      + defined_tags                        = (known after apply)
+      + display_name                        = "saas-platform-vm"
+      + extended_metadata                   = (known after apply)
+      + fault_domain                        = (known after apply)
+      + freeform_tags                       = {
+          + "ManagedBy" = "Terraform"
+          + "Project"   = "SaaS-Platform"
+        }
+      + hostname_label                      = (known after apply)
+      + id                                  = (known after apply)
+      + image                               = (known after apply)
+      + instance_configuration_id           = (known after apply)
+      + ipxe_script                         = (known after apply)
+      + is_ai_enterprise_enabled            = (known after apply)
+      + is_cross_numa_node                  = (known after apply)
+      + is_pv_encryption_in_transit_enabled = (known after apply)
+      + launch_mode                         = (known after apply)
+      + metadata                            = {
+          + "ssh_authorized_keys" = (sensitive value)
+          + "user_data"           = "IyEvYmluL2Jhc2gKc2V0IC1lCgojIDEuIEV2aXRhIHF1ZSBvIFVidW50dSBhYnJhIGphbmVsYXMgaW50ZXJhdGl2YXMgZHVyYW50ZSBvIGFwdCB1cGdyYWRlCmV4cG9ydCBERUJJQU5fRlJPTlRFTkQ9bm9uaW50ZXJhY3RpdmUKCiMgTG9nIGV2ZXJ5dGhpbmcgdG8gYSBmaWxlCmV4ZWMgPiA+KHRlZSAvdmFyL2xvZy9jbG91ZC1pbml0LW91dHB1dC5sb2d8bG9nZ2VyIC10IHVzZXItZGF0YSAtcyAyPi9kZXYvY29uc29sZSkgMj4mMQoKZWNobyAiLS0tIFN0YXJ0aW5nIENsb3VkLUluaXQgU2NyaXB0IC0tLSIKCmVjaG8gIi0tLSBGb3JjaW5nIGFwdCB0byB1c2UgSVB2NCAtLS0iCmVjaG8gJ0FjcXVpcmU6OkZvcmNlSVB2NCAidHJ1ZSI7JyB8IHRlZSAvZXRjL2FwdC9hcHQuY29uZi5kLzk5Zm9yY2UtaXB2NAoKIyBNYW51YWxseSBzZXQgYSBwdWJsaWMgRE5TIHNlcnZlciBhcyBhIGZhbGxiYWNrIGZvciB0aGlzIHNjcmlwdCdzIHNlc3Npb24uCiMgVGhpcyBpcyBhIHBvd2VyZnVsIGRlYnVnZ2luZyBzdGVwIHRvIGJ5cGFzcyBwb3RlbnRpYWwgVkNOIEROUyBpc3N1ZXMuCmVjaG8gIi0tLSBUZW1wb3JhcmlseSBzZXR0aW5nIHB1YmxpYyBETlMgLS0tIgplY2hvICJuYW1lc2VydmVyIDguOC44LjgiIHwgdGVlIC9ldGMvcmVzb2x2LmNvbmYgPiAvZGV2L251bGwKCiMgV2FpdCBmb3IgbmV0d29yayBhbmQgRE5TIHRvIGJlIHJlYWR5LiBUaGlzIHByZXZlbnRzIGZhaWx1cmVzIG9uIGluaXRpYWwgYm9vdC4KZWNobyAiLS0tIFdhaXRpbmcgZm9yIG5ldHdvcmsgYW5kIEROUyByZXNvbHV0aW9uIC0tLSIKdW50aWwgcGluZyAtYyAxIGdvb2dsZS5jb20gJj4vZGV2L251bGw7IGRvCiAgICBlY2hvICJOZXR3b3JrIG5vdCByZWFkeSwgd2FpdGluZyA1IHNlY29uZHMuLi4iCiAgICBzbGVlcCA1CmRvbmUKZWNobyAiLS0tIE5ldHdvcmsgYW5kIEROUyBhcmUgdXAgLS0tIgoKIyAyLiBVcGRhdGUgZSBVcGdyYWRlIGNvbSBmbGFncyBxdWUgZm9yw6dhbSBvIHVzbyBkYXMgY29uZmlndXJhw6fDtWVzIGF0dWFpcyAoc2VtIHRyYXZhcikKYXB0LWdldCB1cGRhdGUKYXB0LWdldCB1cGdyYWRlIC15IC1vIERwa2c6Ok9wdGlvbnM6Oj0iLS1mb3JjZS1jb25mb2xkIgoKIyAzLiBJbnN0YWxhw6fDo28gZGUgZmVycmFtZW50YXMgYsOhc2ljYXMKYXB0LWdldCBpbnN0YWxsIC15IGFwdC10cmFuc3BvcnQtaHR0cHMgY2EtY2VydGlmaWNhdGVzIGN1cmwgc29mdHdhcmUtcHJvcGVydGllcy1jb21tb24gZ2l0CgoKIyAtLS0gQ3JlYXRlIGFuZCBlbmFibGUgYSAyR0Igc3dhcCBmaWxlIC0tLQplY2hvICJDcmVhdGluZyAyR0Igc3dhcCBmaWxlLi4uIgpmYWxsb2NhdGUgLWwgMkcgL3N3YXBmaWxlCmNobW9kIDYwMCAvc3dhcGZpbGUKbWtzd2FwIC9zd2FwZmlsZQpzd2Fwb24gL3N3YXBmaWxlCiMgTWFrZSB0aGUgc3dhcCBmaWxlIHBlcm1hbmVudAplY2hvICcvc3dhcGZpbGUgbm9uZSBzd2FwIHN3IDAgMCcgfCB0ZWUgLWEgL2V0Yy9mc3RhYgplY2hvICJTd2FwIGZpbGUgY3JlYXRlZCBhbmQgZW5hYmxlZC4iCgojIC0tLSBSZXN0YW50ZSBkbyBzZXUgc2NyaXB0IGRlIERvY2tlciAtLS0KZWNobyAiLS0tIFJ1bm5pbmcgbmV0d29yayBkaWFnbm9zdGljcyBiZWZvcmUgRG9ja2VyIGluc3RhbGwgLS0tIgplY2hvICItLS0gVGVzdGluZyBjb25uZWN0aW9uIHRvIGRvd25sb2FkLmRvY2tlci5jb206NDQzIHdpdGggdmVyYm9zZSBvdXRwdXQgLS0tIgpjdXJsIC12IGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbQplY2hvICItLS0gRGlhZ25vc3RpY3MgZmluaXNoZWQuIFRoZSBjb21tYW5kIGFib3ZlIHNob3VsZCBzaG93IHRoZSBjb25uZWN0aW9uIGF0dGVtcHQuIC0tLSIKCmVjaG8gIi0tLSBJbnN0YWxsaW5nIERvY2tlciAtLS0iCiMgVXNlIC9ldGMvYXB0L2tleXJpbmdzIChwYWRyw6NvIG1vZGVybm8gZG8gRG9ja2VyKSBwYXJhIGV2aXRhciBhdmlzb3MgZGUgc2VndXJhbsOnYQpta2RpciAtcCAvZXRjL2FwdC9rZXlyaW5ncwpjdXJsIC1mc1NMIGh0dHBzOi8vZG93bmxvYWQuZG9ja2VyLmNvbS9saW51eC91YnVudHUvZ3BnIHwgZ3BnIC0tZGVhcm1vciAtbyAvZXRjL2FwdC9rZXlyaW5ncy9kb2NrZXItYXJjaGl2ZS1rZXlyaW5nLmdwZwoKZWNobyAiZGViIFthcmNoPSQoZHBrZyAtLXByaW50LWFyY2hpdGVjdHVyZSkgc2lnbmVkLWJ5PS9ldGMvYXB0L2tleXJpbmdzL2RvY2tlci1hcmNoaXZlLWtleXJpbmcuZ3BnXSBodHRwczovL2Rvd25sb2FkLmRvY2tlci5jb20vbGludXgvdWJ1bnR1ICQobHNiX3JlbGVhc2UgLWNzKSBzdGFibGUiIHwgdGVlIC9ldGMvYXB0L3NvdXJjZXMubGlzdC5kL2RvY2tlci5saXN0ID4gL2Rldi9udWxsCgphcHQtZ2V0IHVwZGF0ZQphcHQtZ2V0IGluc3RhbGwgLXkgZG9ja2VyLWNlIGRvY2tlci1jZS1jbGkgY29udGFpbmVyZC5pbwoKIyBBZGQgdWJ1bnR1IHVzZXIgdG8gZG9ja2VyIGdyb3VwCnVzZXJtb2QgLWFHIGRvY2tlciB1YnVudHUKCgojIDMuIEluc3RhbGwgRG9ja2VyIENvbXBvc2UgdjIKZWNobyAiLS0tIEluc3RhbGxpbmcgRG9ja2VyIENvbXBvc2UgLS0tIgpET0NLRVJfQ09NUE9TRV9WRVJTSU9OPSJ2Mi4yNC42IiAjIFVzZSBhIHNwZWNpZmljIHZlcnNpb24gZm9yIHN0YWJpbGl0eQpta2RpciAtcCAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMKY3VybCAtU0wgImh0dHBzOi8vZ2l0aHViLmNvbS9kb2NrZXIvY29tcG9zZS9yZWxlYXNlcy9kb3dubG9hZC8ke0RPQ0tFUl9DT01QT1NFX1ZFUlNJT059L2RvY2tlci1jb21wb3NlLWxpbnV4LSQodW5hbWUgLW0pIiAtbyAvdXNyL2xvY2FsL2xpYi9kb2NrZXIvY2xpLXBsdWdpbnMvZG9ja2VyLWNvbXBvc2UKY2htb2QgK3ggL3Vzci9sb2NhbC9saWIvZG9ja2VyL2NsaS1wbHVnaW5zL2RvY2tlci1jb21wb3NlCgojIFZlcmlmeSBpbnN0YWxsYXRpb25zCmRvY2tlciAtLXZlcnNpb24KZG9ja2VyIGNvbXBvc2UgdmVyc2lvbgoKIyA0LiBTZXR1cCBBcHBsaWNhdGlvbiBEaXJlY3RvcnkKZWNobyAiLS0tIFNldHRpbmcgdXAgYXBwbGljYXRpb24gZGlyZWN0b3J5IC0tLSIKQVBQX0RJUj0iL29wdC9zYWFzLXBsYXRmb3JtIgpSRVBPX1VSTD0iaHR0cHM6Ly9naXRodWIuY29tL0FsemlzL29jaS1zYWFzLXBsYXRmb3JtLXYyLmdpdCIgIyA8LS0gQ0hBTkdFIFRISVMKCm1rZGlyIC1wICR7QVBQX0RJUn0KY2hvd24gLVIgdWJ1bnR1OnVidW50dSAke0FQUF9ESVJ9CgojIFdlIHdpbGwgY2xvbmUgdGhlIHJlcG8gYXMgdGhlICd1YnVudHUnIHVzZXIgZHVyaW5nIHRoZSBmaXJzdCBkZXBsb3kKIyBGb3Igbm93LCB0aGUgZGlyZWN0b3J5IGlzIHJlYWR5LgoKIyA1LiBFbmFibGUgRG9ja2VyIHRvIHN0YXJ0IG9uIGJvb3QKc3lzdGVtY3RsIGVuYWJsZSBkb2NrZXIKCiMgQ2xvbmUgdGhlIHJlcG9zaXRvcnkgYXMgdGhlICd1YnVudHUnIHVzZXIKc3VkbyAtdSB1YnVudHUgZ2l0IGNsb25lICR7R0lUX1JFUE9fVVJMfSAke0FQUF9ESVJ9CgppZiBbIC1kICIke0FQUF9ESVJ9L2RlcGxveSIgXTsgdGhlbgogIGVjaG8gIlJlcG9zaXRvcnkgY2xvbmVkLiBTdGFydGluZyBzZXJ2aWNlcy4uLiIKICAjIFVzZSB0aGUgZG9ja2VyIGNvbXBvc2UgcGx1Z2luLCBydW4gYXMgJ3VidW50dScgdXNlcgogICMgUnVuIGFzIHJvb3QgdG8gZW5zdXJlIHBlcm1pc3Npb25zIGFyZSBub3QgYW4gaXNzdWUgZHVyaW5nIGluaXRpYWwgc2V0dXAuCiAgIyBUaGUgJ3VidW50dScgdXNlciBjYW4gbWFuYWdlIGRvY2tlciBsYXRlciB0aGFua3MgdG8gdGhlICd1c2VybW9kJyBjb21tYW5kIGFib3ZlLgogICNkb2NrZXIgY29tcG9zZSAtZiAke0FQUF9ESVJ9L2RlcGxveS9kb2NrZXItY29tcG9zZS55bWwgdXAgLWQKICBlY2hvICJEb2NrZXIgQ29tcG9zZSBzZXJ2aWNlcyBzdGFydGVkLiIKZWxzZQogIGVjaG8gIkZhaWxlZCB0byBjbG9uZSByZXBvc2l0b3J5IG9yIGRvY2tlci1jb21wb3NlLnltbCBub3QgZm91bmQuIgpmaQoKZWNobyAiLS0tIENsb3VkLUluaXQgU2NyaXB0IEZpbmlzaGVkIFN1Y2Nlc3NmdWxseSAtLS0iCgojIFRoZSBkZXBsb3ltZW50IGl0c2VsZiAoY2xvbmluZyB0aGUgcmVwbyBhbmQgcnVubmluZyBkb2NrZXIgY29tcG9zZSkKIyB3aWxsIGJlIGhhbmRsZWQgYnkgdGhlIEdpdEh1YiBBY3Rpb25zIHBpcGVsaW5lLgoKIyAtLS0gNi4gSGVhbHRoY2hlY2sgLS0tCmVjaG8gIi0tLSBSdW5uaW5nIEhlYWx0aGNoZWNrIC0tLSIKCiMgVmVyaWZpY2Egc2UgbyBEb2NrZXIgZXN0w6EgcmVzcG9uZGVuZG8KaWYgZG9ja2VyIHBzID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXI6IE9LIgplbHNlCiAgICBlY2hvICLinYwgRG9ja2VyOiBGQUlMRUQiCiAgICBleGl0IDEKZmkKCiMgVmVyaWZpY2Egc2UgbyBDb21wb3NlIGVzdMOhIGluc3RhbGFkbwppZiBkb2NrZXIgY29tcG9zZSB2ZXJzaW9uID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICAgIGVjaG8gIuKchSBEb2NrZXIgQ29tcG9zZTogT0siCmVsc2UKICAgIGVjaG8gIuKdjCBEb2NrZXIgQ29tcG9zZTogRkFJTEVEIgogICAgZXhpdCAxCmZpCgojIENyaWEgdW0gbWFyY2Fkb3IgZGUgc3VjZXNzbyBwYXJhIG8gc2V1IHBpcGVsaW5lIHNhYmVyIHF1ZSBhY2Fib3UKdG91Y2ggL3Zhci9sb2cvY2xvdWQtaW5pdC1kb25lCgplY2hvICItLS0gQ2xvdWQtSW5pdCBTY3JpcHQgRmluaXNoZWQgU3VjY2Vzc2Z1bGx5IGF0ICQoZGF0ZSkgLS0tIg=="
+        }
+      + private_ip                          = (known after apply)
+      + public_ip                           = (known after apply)
+      + region                              = (known after apply)
+      + security_attributes                 = (known after apply)
+      + security_attributes_state           = (known after apply)
+      + shape                               = "VM.Standard.E2.1.Micro"
+      + state                               = (known after apply)
+      + subnet_id                           = (known after apply)
+      + system_tags                         = (known after apply)
+      + time_created                        = (known after apply)
+      + time_maintenance_reboot_due         = (known after apply)
+
+      + agent_config (known after apply)
+
+      + availability_config (known after apply)
+
+      + create_vnic_details {
+          + assign_ipv6ip          = (known after apply)
+          + assign_public_ip       = "true"
+          + defined_tags           = (known after apply)
+          + display_name           = (known after apply)
+          + freeform_tags          = (known after apply)
+          + hostname_label         = (known after apply)
+          + nsg_ids                = [
+              + "ocid1.networksecuritygroup.oc1.iad.aaaaaaaanm7fiedz3pmzmo6ieta5hw4guirympovpbrcmf2lnxudmqgpcbiq",
+            ]
+          + private_ip             = (known after apply)
+          + private_ip_id          = (known after apply)
+          + security_attributes    = (known after apply)
+          + skip_source_dest_check = (known after apply)
+          + subnet_cidr            = (known after apply)
+          + subnet_id              = "ocid1.subnet.oc1.iad.aaaaaaaa7a4cjga7g4dgyq5tx65py7vvicxpg2wvh4ubuyr4fwwv6susjfyq"
+          + vlan_id                = (known after apply)
+
+          + ipv6address_ipv6subnet_cidr_pair_details (known after apply)
+        }
+
+      + instance_options (known after apply)
+
+      + launch_options (known after apply)
+
+      + launch_volume_attachments (known after apply)
+
+      + licensing_configs (known after apply)
+
+      + placement_constraint_details (known after apply)
+
+      + platform_config (known after apply)
+
+      + preemptible_instance_config (known after apply)
+
+      + shape_config (known after apply)
+
+      + source_details {
+          + boot_volume_size_in_gbs = (known after apply)
+          + boot_volume_vpus_per_gb = (known after apply)
+          + source_id               = "ocid1.image.oc1.iad.aaaaaaaaxuoxbmbtrnnkm6n5zcjyu4ac6ocmdcxpdxr6s7ndrcfhroc5maiq"
+          + source_type             = "image"
+
+          + instance_source_image_filter_details (known after apply)
+        }
+    }
+
+Plan: 4 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ instance_public_ip    = "129.80.208.119" -> (known after apply)
+  ~ ssh_command           = (sensitive value)
+oci_identity_dynamic_group.backend_dg: Creating...
+module.compute.oci_core_instance.app_vm: Creating...
+oci_identity_dynamic_group.backend_dg: Still creating... [00m10s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m20s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m30s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m40s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [00m50s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m01s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m12s elapsed]
+oci_identity_dynamic_group.backend_dg: Still creating... [01m23s elapsed]

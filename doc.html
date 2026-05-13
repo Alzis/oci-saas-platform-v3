@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação - OCI SaaS Platform</title>
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Reveal.js (Apresentação) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/black.min.css">
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Estilo customizado para o corpo e para o fundo com gradiente */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Estilos para a apresentação Reveal.js */
+        #presentation-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+        }
+        .reveal .slides section {
+            text-align: left;
+        }
+        .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+            text-align: center;
+            text-transform: none;
+        }
+        .reveal h1, .reveal h2 {
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300">
+
+    <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" id="main-content">
+        <header class="text-center mb-20">
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tight gradient-text">OCI SaaS Platform</h1>
+            <p class="mt-4 text-lg md:text-xl text-gray-400">Documentação da Arquitetura e Fluxo de Funcionamento</p>
+        </header>
+
+        <div class="section bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-lg p-8 mb-16">
+            <h2 class="text-3xl font-bold text-white border-b border-gray-700 pb-4 mb-8">Fluxograma da Arquitetura</h2>
+            <div class="mermaid bg-gray-900/50 border border-gray-700 rounded-lg p-6 text-center">
+graph TD
+    subgraph "Usuário & Frontend"
+        U[👨‍💻 Usuário] -->|Acessa URL| FB(OCI Object Storage Bucket)
+        FB -- "Serve index.html (React SPA)" --> U
+    end
+
+    subgraph "Rede e Borda da OCI"
+        U -->|Requisição para api.dominio.com| LB(OCI Load Balancer)
+    end
+
+    subgraph "Infraestrutura de Computação (VMs)"
+        LB -->|Distribui tráfego| VM1(VM 1 - Docker)
+        LB -->|...| VMN(VM N - Docker)
+    end
+    
+    subgraph "OCI Managed Services (PaaS)"
+        DB[(🐘 OCI Database<br>PostgreSQL)]
+    end
+    RD_EXT["⚡ Cache Service<br>(Redis Externo)"]
+    
+    subgraph "VM de Observabilidade (Dedicada)"
+        direction LR
+        VM_OBS(VM Observability) --> OBS_STACK(Observability Stack<br>Prometheus, Grafana, Loki)
+    end
+
+    subgraph "VM App 1 - Ambiente Docker"
+        direction LR
+        VM1 --> T1(Traefik)
+        T1 -->|Roteia| API1(API Node.js) 
+        VM1 -- "Envia Métricas/Logs" --> VM_OBS
+    end
+    
+    subgraph "VM App N - Ambiente Docker"
+        direction LR
+        VMN --> TN(Traefik)
+        TN -->|Roteia| APIN(API Node.js)
+        VMN -- "Envia Métricas/Logs" --> VM_OBS
+    end
+
+    API1 --> DB
+    APIN --> DB
+
+    API1 --> RD_EXT
+    APIN --> RD_EXT
+
+    subgraph "Provisionamento & Deploy"
+        direction LR
+        DEV[👨‍💻 Dev] -- "terraform apply" --> OCI(OCI API) -- "Cria" --> VCN(VCN, LB, VMs...)
+        DEV -- "git push" --> GH(GitHub) -- "CI/CD" --> GHA(GitHub Actions)
+        GHA -- "Deploy" --> VM1
+        GHA -- "Deploy" --> VMN
+        GHA -- "Deploy" --> VM_OBS
+    end
+
+    style U fill:#007bff,stroke:#fff,stroke-width:2px,color:#fff
+    style DEV fill:#007bff,stroke:#fff,stroke-width:2px,color:#fff
+    style OCI fill:#f80000,stroke:#fff,stroke-width:2px,color:#fff
+    style GH fill:#24292e,stroke:#fff,stroke-width:2px,color:#fff
+
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+                <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
+                    <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M5.834 7.166l-1.591-1.591M3.75 10.5H6m-2.25 4.5l1.591 1.591M12 19.5V21.75" /></svg>1. O Fluxo do Usuário</h3>
+                    <p>O usuário acessa a URL do frontend, que é um arquivo HTML servido publicamente por um Bucket no OCI Object Storage. O navegador carrega a aplicação (React SPA), que por sua vez faz chamadas para o backend (api.dominio.com).</p>
+                </div>
+                <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
+                    <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.115 5.19l.319 1.913A6 6 0 008.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 002.288-4.042 1.087 1.087 0 00-.358-1.099l-1.33-1.108c-.251-.21-.582-.299-.905-.245l-1.17.195a1.125 1.125 0 01-.98-.98l.195-1.17a.565.565 0 00-.245-.905l-1.108-1.33c-.29-.358-.76-.44-1.1-.358a8.7 8.7 0 00-4.042 2.288z" /></svg>2. Rede e Balanceamento</h3>
+                    <p>As requisições para a API chegam primeiro a um Load Balancer da OCI. Ele é o ponto de entrada público para o backend, responsável por distribuir as requisições de forma equilibrada entre as <strong>N</strong> máquinas virtuais disponíveis, garantindo alta disponibilidade e escalabilidade horizontal.</p>
+                </div>
+                <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
+                    <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>3. Ambiente de Execução</h3>
+                    <p>A arquitetura separa as responsabilidades: <strong>VMs de Aplicação</strong> rodam a API (Node.js), o reverse proxy (Traefik) e o cache (Redis). Uma <strong>VM de Observabilidade</strong> dedicada centraliza a coleta e visualização de métricas (Prometheus) e logs (Loki) de todo o ambiente.</p>
+                </div>
+                <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
+                    <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m19.5 0a3 3 0 01-3 3H5.25a3 3 0 01-3-3m19.5 0a3 3 0 00-3-3H5.25a3 3 0 00-3 3m16.5 0h.008v.008h-.008v-.008z" /></svg>4. Serviços de Backend</h3>
+                    <p>A API Node.js se comunica com um serviço gerenciado de PostgreSQL para persistência e com um serviço de cache Redis. A implementação do Redis é flexível, podendo ser um serviço gerenciado (PaaS), uma VM dedicada ou outra fonte externa, garantindo um cache centralizado.</p>
+                </div>
+                <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
+                    <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75c0 3.142-2.558 5.69-5.69 5.69s-5.69-2.548-5.69-5.69c0-3.142 2.558-5.69 5.69-5.69s5.69 2.548 5.69 5.69zM12 12.75c-3.142 0-5.69 2.548-5.69 5.69 0 3.142 2.558 5.69 5.69 5.69s5.69-2.548 5.69-5.69c0-3.142-2.558-5.69-5.69-5.69z" /></svg>5. Provisionamento (IaC)</h3>
+                    <p>Toda a infraestrutura na OCI (redes, subnets, VMs, Load Balancer, buckets, regras de segurança) é criada e gerenciada de forma automatizada pelo Terraform. Isso garante que o ambiente seja consistente, replicável e versionado.</p>
+                </div>
+                <div class="explanation-item bg-gray-900/50 p-6 rounded-lg border border-gray-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1">
+                    <h3 class="font-semibold text-lg text-white flex items-center gap-3 mb-2"><svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 2.25c-2.59 0-5.04.99-6.9 2.81a14.98 14.98 0 00-2.28 14.45A14.98 14.98 0 0011.18 22.5c.97 0 1.91-.14 2.8-.42m2.61-4.71a5.962 5.962 0 00-5.84-7.38v4.8m5.84 2.58a5.962 5.962 0 01-5.84 7.38m0-12.18a5.962 5.962 0 015.84 7.38m-5.84-7.38a5.962 5.962 0 00-5.84 7.38" /></svg>6. Deploy Contínuo (CI/CD)</h3>
+                    <p>Quando um desenvolvedor envia código novo para o repositório no GitHub, um processo de CI/CD (GitHub Actions) é acionado. Ele se conecta via SSH às VMs, baixa a versão mais recente do código e executa `docker compose up` para atualizar a aplicação no ar, sem intervenção manual.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-lg p-8 mb-16">
+            <h2 class="text-3xl font-bold text-white border-b border-gray-700 pb-4 mb-8">Considerações Arquiteturais</h2>
+            <div class="space-y-8">
+                <div class="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+                    <h3 class="font-semibold text-xl text-white mb-3">Estratégia de Cache (Redis)</h3>
+                    <p class="text-gray-400 mb-4">A forma como o Redis é implantado é uma decisão de arquitetura crucial que impacta a escalabilidade e a consistência. O diagrama principal mostra um serviço de cache desacoplado, que pode ser implementado de várias formas:</p>
+                    <ul class="list-disc list-inside space-y-3">
+                        <li><strong class="text-yellow-400">Opção 1 (Local em cada VM):</strong> Cada VM de aplicação tem seu próprio container Redis. <br/><span class="text-sm text-gray-400"><strong>Prós:</strong> Simples, baixa latência. <strong>Contras:</strong> Cache inconsistente entre as VMs, o que não é ideal para escalar.</span></li>
+                        <li><strong class="text-blue-400">Opção 2 (VM Dedicada):</strong> Centralizar o Redis em uma VM interna dedicada (ou na VM de Observabilidade). <br/><span class="text-sm text-gray-400"><strong>Prós:</strong> Cache consistente e compartilhado. <strong>Contras:</strong> Cria um ponto único de falha e gargalo de rede.</span></li>
+                        <li><strong class="text-green-400">Opção 3 (Serviço Gerenciado - Ideal):</strong> Utilizar um serviço PaaS como o <strong>OCI Cache with Redis</strong>. <br/><span class="text-sm text-gray-400"><strong>Prós:</strong> A melhor opção para produção. Cache consistente, alta disponibilidade, escalabilidade e gerenciamento pela OCI. <strong>Contras:</strong> Custo maior e acoplamento ao provedor.</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-lg p-8 text-center">
+            <h2 class="text-3xl font-bold text-white mb-4">Apresentação do Projeto</h2>
+            <p class="text-gray-400 mb-8">Clique no botão abaixo para iniciar uma apresentação de slides detalhada sobre a arquitetura.</p>
+            <button class="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300" onclick="startPresentation()">Iniciar Apresentação</button>
+        </div>
+    </div>
+
+    <!-- Container da Apresentação -->
+    <div id="presentation-container">
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1 class="gradient-text" style="font-size: 3.5em;">OCI SaaS Platform</h1>
+                    <h3>Uma Arquitetura Moderna na Nuvem</h3>
+                    <p><small>Pressione 'F' para tela cheia, 'Esc' para sair</small></p>
+                </section>
+
+                <section>
+                    <h2 class="gradient-text">O Desafio</h2>
+                    <p class="text-xl text-gray-400 mb-8">Como implantar uma aplicação web moderna que seja:</p>
+                    <div class="flex flex-wrap justify-center gap-6 text-lg">
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12" /></svg>
+                            <span>Escalável e Disponível</span>
+                        </div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            <span>Segura e Isolada</span>
+                        </div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            <span>Fácil de Manter</span>
+                        </div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            <span>Totalmente Observável</span>
+                        </div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5V4H4zm0 9h5v5H4v-5zm9-9h5v5h-5V4zm0 9h5v5h-5v-5z" /></svg>
+                            <span>Provisionada via Código</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h2 class="gradient-text">A Solução: Arquitetura em Camadas</h2>
+                    <p class="text-xl text-gray-400">Uma plataforma completa construída sobre a OCI usando ferramentas padrão de mercado.</p>
+                    <div class="mermaid fragment">
+graph TD
+    A["Infraestrutura como Código<br>(Terraform)"] --> B(Rede e Segurança<br>VCN, NSG, LB)
+    B --> C{VMs com Docker<br>(Compute Instances)} 
+    B --> G["Banco de Dados Gerenciado<br>(OCI PostgreSQL Service)"]
+    C --> D["Orquestração<br>(Docker Compose)"]
+    D --> E["API Gateway<br>(Traefik)"]
+    E --> F[API Node.js]
+    F --> G
+    F --> R[Cache<br>(Redis in Docker)]
+    C --> H["Observabilidade<br>(Prometheus, Grafana, Loki)"]
+                    </div>
+                </section>
+
+                <section>
+                    <h4>Pilar 1: Infraestrutura como Código (IaC)</h4>
+                    <h2 class="gradient-text">Terraform</h2>
+                    <p class="text-lg text-gray-400">Define toda a nossa nuvem em arquivos de código, permitindo criar, modificar e versionar a infraestrutura de forma segura e eficiente.</p>
+                    <div class="mt-8 grid grid-cols-3 gap-6 text-center">
+                        <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Consistência</strong><p class="text-sm text-gray-400">Ambientes de dev e prod idênticos.</p></div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Automação</strong><p class="text-sm text-gray-400">Criação de toda a stack com um comando.</p></div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Replicabilidade</strong><p class="text-sm text-gray-400">Sobe uma cópia exata em qualquer região.</p></div>
+                    </div>
+                </section>
+
+                <section>
+                    <h4>Pilar 2: Containerização</h4>
+                    <h2 class="gradient-text">Docker</h2>
+                    <p class="text-lg text-gray-400">Cada parte da aplicação (API, Cache, etc) é empacotada em um "container", isolando os serviços e garantindo que funcionem da mesma forma em qualquer lugar.</p>
+                    <div class="mt-8 grid grid-cols-3 gap-6 text-center">
+                        <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Isolamento</strong><p class="text-sm text-gray-400">Dependências de um serviço não afetam outros.</p></div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Portabilidade</strong><p class="text-sm text-gray-400">Roda igual no PC do dev e na nuvem.</p></div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg"><strong>Leveza</strong><p class="text-sm text-gray-400">Mais eficientes que máquinas virtuais completas.</p></div>
+                    </div>
+                </section>
+
+                <section>
+                    <h4>Pilar 3: Orquestração e Roteamento</h4>
+                    <h2 class="gradient-text">Docker Compose & Traefik</h2>
+                    <p class="text-lg"><strong>Docker Compose</strong> define e executa todos os containers com um único arquivo de configuração.</p>
+                    <p class="text-lg mt-4"><strong>Traefik</strong> atua como nosso "porteiro" inteligente: descobre os serviços, gerencia o tráfego e obtém certificados SSL (HTTPS) automaticamente.</p>
+                </section>
+
+                <section>
+                    <h4>Pilar 4: Observabilidade Completa</h4>
+                    <h2 class="gradient-text">Prometheus, Grafana & Loki</h2>
+                    <p class="text-lg text-gray-400">Não basta a aplicação funcionar, precisamos saber <i>como</i> ela está funcionando.</p>
+                    <div class="mt-8 grid grid-cols-3 gap-6 text-center text-base">
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <strong>Prometheus</strong><p class="text-sm text-gray-400">Coleta métricas de performance (CPU, RAM, etc).</p>
+                        </div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" /></svg>
+                            <strong>Loki</strong><p class="text-sm text-gray-400">Agrega todos os logs dos containers em um só lugar.</p>
+                        </div>
+                        <div class="fragment bg-gray-800 p-4 rounded-lg flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
+                            <strong>Grafana</strong><p class="text-sm text-gray-400">Cria dashboards visuais e alertas com os dados.</p>
+                        </div>
+                    </div>
+                    <p class="fragment">"Se não pode ser medido, não pode ser gerenciado."</p>
+                </section>
+
+                <section>
+                    <h4>Pilar 5: Deploy Automatizado</h4>
+                    <h2 class="gradient-text">CI/CD com GitHub Actions</h2>
+                    <p class="text-lg text-gray-400 mb-8">O processo de colocar uma nova versão da aplicação no ar é totalmente automatizado.</p>
+                    <div class="flex items-center justify-center space-x-4 text-lg">
+                        <div class="fragment">Git Push</div>
+                        <div class="fragment text-blue-400 text-2xl">→</div>
+                        <div class="fragment">GitHub Actions</div>
+                        <div class="fragment text-blue-400 text-2xl">→</div>
+                        <div class="fragment">SSH & Deploy</div>
+                    </div>
+                    <p class="fragment">Resultado: Deploys rápidos, seguros e sem intervenção manual.</p>
+                </section>
+
+                <section>
+                    <h2 class="gradient-text">Conclusão</h2>
+                    <p>A plataforma OCI SaaS demonstra uma arquitetura robusta, escalável e alinhada com as melhores práticas de DevOps e engenharia de software, pronta para suportar aplicações de missão crítica.</p>
+                    <br>
+                    <h3>Obrigado!</h3>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        // Importa o Mermaid como módulo
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        window.mermaid = mermaid; // Torna o mermaid acessível globalmente
+
+        // Inicializa o Mermaid, mas sem renderizar automaticamente na carga da página.
+        // A renderização será controlada manualmente para elementos visíveis.
+        mermaid.initialize({
+            startOnLoad: false, // Desativa a renderização automática para controle manual
+            theme: 'dark',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+
+        // Renderiza o diagrama Mermaid na seção principal assim que o DOM estiver pronto.
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.mermaid) {
+                mermaid.run({ nodes: document.querySelectorAll('#main-content .mermaid') });
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+    <script>
+        let deck;
+
+        function initializePresentation() {
+            deck = new Reveal({
+                backgroundTransition: 'slide',
+                transition: 'slide',
+                embedded: true,
+                keyboard: {
+                    27: () => { // ESC
+                        closePresentation();
+                    }
+                }
+            });
+            deck.initialize();
+
+            // Função auxiliar para renderizar o Mermaid no slide que se torna visível
+            const renderCurrentSlideMermaid = (event) => {
+                if (window.mermaid) {
+                    const slide = event.currentSlide || deck.getCurrentSlide();
+                    const mermaidNodes = slide.querySelectorAll('.mermaid:not(.rendered)');
+                    if (mermaidNodes.length > 0) {
+                        mermaid.run({ nodes: mermaidNodes });
+                    }
+                }
+            };
+
+            // Adiciona listeners para renderizar o diagrama no primeiro slide (evento 'ready')
+            // e em todas as mudanças de slide subsequentes.
+            deck.on('ready', renderCurrentSlideMermaid);
+            deck.on('slidechanged', renderCurrentSlideMermaid);
+        }
+
+        function startPresentation() {
+            document.getElementById('presentation-container').style.display = 'block';
+            document.getElementById('main-content').style.display = 'none';
+            if (!deck) {
+                initializePresentation();
+            } 
+            deck.layout(); // Força o re-layout para ajustar ao novo container visível
+        }
+
+        function closePresentation() {
+            document.getElementById('presentation-container').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }
+
+        // Adiciona um listener para a tecla ESC no documento inteiro
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                if (document.getElementById('presentation-container').style.display === 'block') {
+                    closePresentation();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

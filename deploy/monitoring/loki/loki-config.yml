@@ -1,0 +1,368 @@
+version: "3.9"
+
+services:
+
+  # ==================================================
+  # REVERSE PROXY / API GATEWAY
+  # ==================================================
+
+  traefik:
+    image: traefik:v3.0
+    restart: always
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+
+      # HTTP/HTTPS
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+
+      # Let's Encrypt
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=admin@seudominio.com
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+
+      # Metrics
+      - --metrics.prometheus=true
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik:/letsencrypt
+
+    networks:
+      - frontend
+      - backend
+
+  # ==================================================
+  # BACKEND API
+  # ==================================================
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+
+    restart: always
+
+    deploy:
+      replicas: 3
+
+    environment:
+      NODE_ENV: production
+
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_DATABASE}
+
+      REDIS_URL: redis://redis:6379
+
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+      redis:
+        condition: service_started
+
+      rabbitmq:
+        condition: service_started
+
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.api.rule=Host(`api.seudominio.com`)
+      - traefik.http.routers.api.entrypoints=websecure
+      - traefik.http.routers.api.tls.certresolver=letsencrypt
+
+      - traefik.http.services.api.loadbalancer.server.port=3000
+
+    networks:
+      - backend
+      - frontend
+
+  # ==================================================
+  # POSTGRESQL
+  # ==================================================
+
+  db:
+    image: postgres:16
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - backend
+
+  # ==================================================
+  # REDIS
+  # ==================================================
+
+  redis:
+    image: redis:7-alpine
+
+    restart: always
+
+    command: redis-server --appendonly yes
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - backend
+
+  # ==================================================
+  # RABBITMQ
+  # ==================================================
+
+  rabbitmq:
+    image: rabbitmq:3-management
+
+    restart: always
+
+    ports:
+      - "15672:15672"
+
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    networks:
+      - backend
+
+  # ==================================================
+  # MINIO (S3 COMPATIBLE)
+  # ==================================================
+
+  minio:
+    image: minio/minio
+
+    restart: always
+
+    command: server /data --console-address ":9001"
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
+    ports:
+      - "9001:9001"
+
+    volumes:
+      - minio_data:/data
+
+    networks:
+      - backend
+
+  # ==================================================
+  # OBSERVABILIDADE
+  # ==================================================
+
+  prometheus:
+    image: prom/prometheus
+
+    restart: always
+
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana
+
+    restart: always
+
+    ports:
+      - "3001:3000"
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+    depends_on:
+      - prometheus
+      - loki
+
+    networks:
+      - backend
+
+  loki:
+    image: grafana/loki:2.9.2
+
+    restart: always
+
+    command: -config.file=/etc/loki/local-config.yaml
+
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
+
+    networks:
+      - backend
+
+  promtail:
+    image: grafana/promtail:2.9.2
+
+    restart: always
+
+    command: -config.file=/etc/promtail/config.yml
+
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml
+
+    networks:
+      - backend
+
+  # ==================================================
+  # METRICAS DO HOST
+  # ==================================================
+
+  node-exporter:
+    image: prom/node-exporter
+
+    restart: always
+
+    pid: host
+
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+
+    networks:
+      - backend
+
+  # ==================================================
+  # METRICAS DOS CONTAINERS
+  # ==================================================
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+
+    restart: always
+
+    devices:
+      - /dev/kmsg
+
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+
+    networks:
+      - backend
+
+  # ==================================================
+  # OPENTELEMETRY
+  # ==================================================
+
+  otel-collector:
+    image: otel/opentelemetry-collector
+
+    restart: always
+
+    command: ["--config=/etc/otel-collector-config.yaml"]
+
+    volumes:
+      - ./monitoring/otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+
+    networks:
+      - backend
+
+  # ==================================================
+  # VAULT
+  # ==================================================
+
+  vault:
+    image: hashicorp/vault
+
+    restart: always
+
+    cap_add:
+      - IPC_LOCK
+
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+
+    ports:
+      - "8200:8200"
+
+    networks:
+      - backend
+
+  # ==================================================
+  # PORTAINER
+  # ==================================================
+
+  portainer:
+    image: portainer/portainer-ce
+
+    restart: always
+
+    ports:
+      - "9000:9000"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    networks:
+      - backend
+
+# ==================================================
+# NETWORKS
+# ==================================================
+
+networks:
+  frontend:
+    driver: bridge
+
+  backend:
+    driver: bridge
+
+# ==================================================
+# VOLUMES
+# ==================================================
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:

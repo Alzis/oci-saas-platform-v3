@@ -1,0 +1,63 @@
+name: Deploy to OCI VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm install
+
+      # Adicione aqui passos de lint e teste
+      # - name: Lint code
+      #   run: npm run lint
+      # - name: Run tests
+      #   run: npm test
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.OCI_VM_HOST }}
+          username: ${{ secrets.OCI_VM_USER }}
+          key: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
+          env:
+            # Passa os secrets do GitHub para o script
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            REDIS_URL: ${{ secrets.REDIS_URL }}
+          script: |
+            set -e
+            APP_DIR="/opt/saas-platform"
+            REPO_URL="https://github.com/Alzis/oci-saas-platform-v2.git" # <-- MUDE PARA SEU REPO
+            
+            # Clona o repositório se não existir, senão atualiza
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone $REPO_URL $APP_DIR
+            fi
+            cd $APP_DIR
+            git pull origin main
+
+            # Cria o arquivo .env com os secrets (agora incluindo DATABASE_URL)
+            echo "Creating .env file with database connection string..."
+            echo "DATABASE_URL=${DATABASE_URL}" > deploy/.env
+            echo "REDIS_URL=${REDIS_URL}" >> deploy/.env
+            echo "Done."
+            
+            # Inicia/Atualiza todos os serviços
+            docker compose -f deploy/docker-compose.yml up -d --build --force-recreate

@@ -1,0 +1,13 @@
+# Ignore local development artifacts and sensitive files
+.DS_Store
+*.log
+
+# Ignore local node modules, they will be installed inside the container
+node_modules
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore the Dockerfile itself from being copied into the image
+Dockerfile

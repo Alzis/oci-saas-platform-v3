@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>OCI SaaS Demo</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+body{
+font-family:Arial;
+padding:40px;
+background:#111;
+color:#fff;
+}
+.card{
+background:#1e1e1e;
+padding:20px;
+border-radius:10px;
+margin-top:20px;
+}
+button{
+padding:10px 20px;
+cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script type="text/babel">
+
+function App(){
+
+  const [data,setData] = React.useState(null)
+
+  async function loadData(){
+
+    const response = await fetch("https://${api_endpoint}/api/status")
+
+    const json = await response.json()
+
+    setData(json)
+  }
+
+  return (
+    <div>
+      <h1>OCI SaaS Platform</h1>
+
+      <button onClick={loadData}>
+        Carregar API
+      </button>
+
+      {data && (
+        <div className="card">
+          <p><b>API:</b> {data.message}</p>
+          <p><b>Redis:</b> {data.redis}</p>
+          <p><b>PostgreSQL:</b> {data.postgres}</p>
+          <p><b>Servidor:</b> {data.server}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App />)
+
+</script>
+
+</body>
+</html>
