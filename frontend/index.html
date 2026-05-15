@@ -2,6 +2,498 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mundo da Imaginação | Loja de Brinquedos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-kids { font-family: 'Fredoka', sans-serif; }
+        
+        .bg-pattern {
+            background-color: #f8fafc;
+            background-image:  radial-gradient(#e2e8f0 0.5px, transparent 0.5px), radial-gradient(#e2e8f0 0.5px, #f8fafc 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0,10px 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .transition-all { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-pattern text-slate-800">
+
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showView('store')">
+                <div class="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg rotate-3">
+                    <span class="text-2xl">🧸</span>
+                </div>
+                <span class="text-2xl font-bold text-indigo-600 tracking-tight hidden sm:block">Mundo da <span class="text-pink-500">Imaginação</span></span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="showView('admin-login')" class="text-sm font-semibold text-slate-500 hover:text-indigo-600 transition-colors">Administração</button>
+                <button onclick="toggleCart()" class="relative p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">0</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main-content">
+        <div id="store-view" class="view">
+            <section id="hero-section" class="relative overflow-hidden bg-indigo-600 py-16 sm:py-24 mb-12">
+                <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                    <svg width="100%" height="100%"><pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="white" /></pattern><rect width="100%" height="100%" fill="url(#dots)" /></svg>
+                </div>
+                <div class="container mx-auto px-4 relative flex flex-col md:flex-row items-center gap-12">
+                    <div class="flex-1 text-center md:text-left text-white">
+                        <span class="inline-block px-4 py-1 bg-yellow-400 text-indigo-900 rounded-full text-xs font-black uppercase mb-4 tracking-widest">Destaque Mágico</span>
+                        <h1 id="hero-title" class="text-4xl md:text-6xl font-bold mb-6 leading-tight">Carregando...</h1>
+                        <p id="hero-desc" class="text-lg text-indigo-100 mb-8 max-w-lg"></p>
+                        <button id="hero-btn" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-10 rounded-2xl shadow-xl hover:-translate-y-1 transition-all inline-block">
+                            Ver Detalhes
+                        </button>
+                    </div>
+                    <div class="flex-1 w-full max-w-md">
+                        <div class="relative">
+                            <div class="absolute -inset-4 bg-white/20 rounded-[40px] blur-2xl rotate-3"></div>
+                            <img id="hero-img" src="" class="relative w-full aspect-square object-cover rounded-[32px] shadow-2xl border-8 border-white/10" alt="Destaque">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="container mx-auto px-4 mb-8">
+                <div class="flex flex-wrap items-center justify-center gap-3" id="category-filters"></div>
+            </div>
+
+            <div class="container mx-auto px-4 pb-20">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="product-grid"></div>
+            </div>
+        </div>
+
+        <div id="admin-login-view" class="view hidden py-20 px-4">
+            <div class="max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-8 border border-slate-100">
+                <h2 class="text-3xl font-bold text-center text-slate-800 mb-8">Acesso do Guardião</h2>
+                <div class="space-y-4">
+                    <input type="text" id="login-user" value="admin" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="Usuário">
+                    <input type="password" id="login-pass" value="admin" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="Senha">
+                    <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg">Entrar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-dashboard-view" class="view hidden py-10 px-4 bg-slate-50 min-h-screen">
+            <div class="container mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                    <h2 class="text-3xl font-bold text-slate-800">Painel de Controle</h2>
+                    <div class="flex gap-2">
+                        <button onclick="resetToDefault()" class="bg-orange-100 text-orange-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-orange-200">🔄 Restaurar Catálogo Inicial</button>
+                        <button onclick="logout()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-sm font-bold">Sair</button>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 sticky top-24">
+                            <h3 id="form-title" class="text-xl font-bold mb-6 flex justify-between items-center">
+                                <span id="admin-form-mode">Novo Brinquedo</span>
+                                <button id="cancel-edit" onclick="resetAdminForm()" class="hidden text-red-500 text-sm">Cancelar</button>
+                            </h3>
+                            <form id="product-form" class="space-y-4" onsubmit="saveProduct(event)">
+                                <input type="hidden" id="edit-id">
+                                <input type="text" id="p-title" required placeholder="Nome do Brinquedo" class="w-full px-4 py-2 border rounded-xl">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="number" step="0.01" id="p-price" required placeholder="Preço" class="w-full px-4 py-2 border rounded-xl">
+                                    <select id="p-category" required class="w-full px-4 py-2 border rounded-xl"></select>
+                                </div>
+                                <input type="url" id="p-image" required placeholder="URL da Imagem" class="w-full px-4 py-2 border rounded-xl">
+                                <textarea id="p-description" required rows="3" placeholder="Descrição" class="w-full px-4 py-2 border rounded-xl resize-none"></textarea>
+                                <button type="submit" id="submit-btn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg">Salvar</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Produto</th>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Preço</th>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-product-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="cart-drawer" class="fixed inset-0 z-50 invisible opacity-0 transition-all duration-300">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleCart()"></div>
+        <div class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300" id="cart-content">
+            <div class="p-6 bg-indigo-600 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold">Carrinho de Aventuras</h3>
+                <button onclick="toggleCart()" class="text-2xl">✕</button>
+            </div>
+            <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar"></div>
+            <div class="p-6 bg-slate-50 border-t">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-slate-500 font-bold">Total:</span>
+                    <span id="cart-total" class="text-2xl font-bold text-indigo-600">R$ 0,00</span>
+                </div>
+                <button onclick="checkout()" class="w-full bg-pink-500 text-white font-bold py-4 rounded-2xl shadow-lg">Finalizar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="product-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closeProductModal()"></div>
+        <div class="relative bg-white w-full max-w-4xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+            <button onclick="closeProductModal()" class="absolute top-6 right-6 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center shadow-md">✕</button>
+            <div class="md:w-1/2 h-64 md:h-auto bg-slate-100">
+                <img id="modal-img" src="" class="w-full h-full object-cover">
+            </div>
+            <div class="md:w-1/2 p-8 md:p-12 overflow-y-auto custom-scrollbar">
+                <span id="modal-category" class="inline-block text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-2"></span>
+                <h3 id="modal-title" class="text-3xl font-bold text-slate-800 mb-4 leading-tight"></h3>
+                <div id="modal-price" class="text-4xl font-bold text-pink-500 mb-6"></div>
+                <p id="modal-desc" class="text-slate-600 leading-relaxed mb-10"></p>
+                <button id="modal-add-btn" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl">Adicionar ao Carrinho</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-900 text-white px-6 py-3 rounded-full text-sm font-bold shadow-2xl transition-all duration-300 translate-y-20 opacity-0 pointer-events-none"></div>
+
+    <script>
+        const STORAGE_KEY_PRODUCTS = 'mundo_magico_v5_prod';
+        const STORAGE_KEY_CATEGORIES = 'mundo_magico_v5_cat';
+        const STORAGE_KEY_CART = 'mundo_magico_v5_cart';
+        const STORAGE_KEY_HIGHLIGHT = 'mundo_magico_v5_high';
+
+        const seedProducts = [
+            { id: 'p1', title: "Ursinho Teddy Gigante", category: "Pelúcias", price: 129.90, image: "https://images.unsplash.com/photo-1559454403-b8fb88521f11?q=80&w=400", description: "O companheiro perfeito para as noites de sono e brincadeiras." },
+            { id: 'p2', title: "Robô Galático Z-100", category: "Eletrônicos", price: 245.00, image: "https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=400", description: "Luzes LED e movimentos programáveis para pequenos engenheiros." },
+            { id: 'p3', title: "Castelo de Blocos 500pçs", category: "Educativos", price: 89.50, image: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?q=80&w=400", description: "Desenvolva a criatividade construindo reinos mágicos." },
+            { id: 'p4', title: "Kit Pequeno Cientista", category: "Educativos", price: 159.90, image: "https://images.unsplash.com/photo-1530210124550-912dc1381cb8?q=80&w=400", description: "Aprenda química e biologia de forma divertida e segura." },
+            { id: 'p5', title: "Super Jipe Off-Road", category: "Veículos", price: 199.90, image: "https://images.unsplash.com/photo-1532330393533-443990a51d10?q=80&w=400", description: "Controle remoto de longo alcance para aventuras radicais." },
+            { id: 'p6', title: "Cozinha Master Chef Jr", category: "Educativos", price: 320.00, image: "https://images.unsplash.com/photo-1583912267550-d44d7a125e7e?q=80&w=400", description: "Cozinha completa com acessórios para os pequenos chefs." },
+            { id: 'p7', title: "Dino Rex Articulado", category: "Brinquedos", price: 145.50, image: "https://images.unsplash.com/photo-1551103782-8ab07afd45c1?q=80&w=400", description: "Dinossauro que ruge e caminha com movimentos realistas." },
+            { id: 'p8', title: "Quebra-Cabeça Mapa Mundi", category: "Educativos", price: 65.00, image: "https://images.unsplash.com/photo-1586281380117-5a60ae2050cc?q=80&w=400", description: "500 peças para aprender geografia de um jeito divertido." },
+            { id: 'p9', title: "Boneco Homem de Ferro", category: "Marvel", price: 189.90, image: "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?q=80&w=400", description: "Figura de ação articulada com acabamento metálico premium." },
+            { id: 'p10', title: "Cavaleiro das Trevas Batman", category: "DC", price: 175.00, image: "https://images.unsplash.com/photo-1531259683007-016a7b628fc3?q=80&w=400", description: "Protetor de Gotham com capa de tecido e acessórios." },
+            { id: 'p11', title: "Lançador de Teia Spider", category: "Marvel", price: 149.00, image: "https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=400", description: "Sinta-se como o Peter Parker com este lançador incrível." },
+            { id: 'p12', title: "Wonder Woman Gold", category: "DC", price: 169.90, image: "https://images.unsplash.com/photo-1620626011761-9963d7b59675?q=80&w=400", description: "A guerreira amazona em sua armadura dourada." },
+            { id: 'p13', title: "Ferrari Vermelha RC", category: "Veículos", price: 299.90, image: "https://images.unsplash.com/photo-1594055282988-d4217f07f6df?q=80&w=400", description: "Velocidade e elegância em escala 1:14." },
+            { id: 'p14', title: "Geleleca Neon Stelar", category: "Slimes", price: 24.90, image: "https://images.unsplash.com/photo-1551028150-64b9f398f678?q=80&w=400", description: "Slime que brilha no escuro com gliter estelar." },
+            { id: 'p15', title: "Caminhão de Bombeiro", category: "Veículos", price: 135.00, image: "https://images.unsplash.com/photo-1533550822823-d3ca3419984d?q=80&w=400", description: "Com escada articulada e luzes de emergência reais." },
+            { id: 'p16', title: "Thanos Infinity War", category: "Marvel", price: 220.00, image: "https://images.unsplash.com/photo-1612036781267-9d762e811779?q=80&w=400", description: "A maior ameaça do universo com a Manopla do Infinito." },
+            { id: 'p17', title: "Super-Homem Clássico", category: "DC", price: 165.00, image: "https://images.unsplash.com/photo-1608889175123-8ee362201f81?q=80&w=400", description: "O Homem de Aço pronto para salvar o dia em Metrópolis." },
+            { id: 'p18', title: "Drone Explorer 4K", category: "Eletrônicos", price: 450.00, image: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?q=80&w=400", description: "Câmera estável para fotos aéreas incríveis." },
+            { id: 'p19', title: "Triceratops Articulado", category: "Brinquedos", price: 110.00, image: "https://images.unsplash.com/photo-1525857597365-5f6dbff2e36e?q=80&w=400", description: "Cabeça articulada e texturas realistas do período cretáceo." },
+            { id: 'p20', title: "Slime Explosão de Cores", category: "Slimes", price: 29.90, image: "https://images.unsplash.com/photo-1615485240314-5b4d66838a6a?q=80&w=400", description: "Mix de cores neon para esticar e apertar o dia todo." },
+            { id: 'p21', title: "Velociraptor Veloz", category: "Brinquedos", price: 125.00, image: "https://images.unsplash.com/photo-1551103782-8ab07afd45c1?q=80&w=400", description: "O caçador mais rápido do mundo jurássico." },
+            { id: 'p22', title: "Ursinho Azul Nuvem", category: "Pelúcias", price: 95.00, image: "https://images.unsplash.com/photo-1559454403-b8fb88521f11?q=80&w=400", description: "Extremamente macio e aconchegante para abraçar." },
+            { id: 'p23', title: "Coelhinho Rosa Doce", category: "Pelúcias", price: 88.00, image: "https://images.unsplash.com/photo-1585155770447-2f66e2a397b5?q=80&w=400", description: "O presente ideal para os pequenos aventureiros." },
+            { id: 'p24', title: "Jogo Estratégia Medieval", category: "Educativos", price: 120.00, image: "https://images.unsplash.com/photo-1610812383742-99086e396884?q=80&w=400", description: "Conquiste territórios neste jogo de tabuleiro clássico." },
+            { id: 'p25', title: "Helicóptero de Resgate", category: "Veículos", price: 145.00, image: "https://images.unsplash.com/photo-1563204481-36f73a5a4079?q=80&w=400", description: "Hélices giratórias e guincho funcional para missões." },
+            { id: 'p26', title: "Kit Pintura Aquarela", category: "Educativos", price: 75.00, image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=400", description: "Tudo que um pequeno artista precisa para criar obras." },
+            { id: 'p27', title: "Espada de Luz Espacial", category: "Eletrônicos", price: 199.00, image: "https://images.unsplash.com/photo-1589487391730-58f20eb2c308?q=80&w=400", description: "Sons de batalha e luzes coloridas para duelos épicos." },
+            { id: 'p28', title: "Lanterna Projetora Dino", category: "Brinquedos", price: 49.90, image: "https://images.unsplash.com/photo-1584305323473-d674412114d1?q=80&w=400", description: "Projete dinossauros no seu teto e transforme seu quarto." }
+        ];
+
+        let allProducts = [];
+        let allCategories = [];
+        let cart = [];
+        let activeCategory = 'Todos';
+        let highlightedProductId = '';
+
+        function init() {
+            allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY_PRODUCTS)) || seedProducts;
+            allCategories = JSON.parse(localStorage.getItem(STORAGE_KEY_CATEGORIES)) || ["Todos", "Pelúcias", "Eletrônicos", "Educativos", "Veículos", "Brinquedos", "Marvel", "DC", "Slimes"];
+            highlightedProductId = localStorage.getItem(STORAGE_KEY_HIGHLIGHT) || allProducts[0].id;
+            cart = JSON.parse(localStorage.getItem(STORAGE_KEY_CART)) || [];
+
+            if (!localStorage.getItem(STORAGE_KEY_PRODUCTS)) {
+                localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(seedProducts));
+                localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(allCategories));
+            }
+
+            renderAll();
+        }
+
+        // Helper para lidar com imagens quebradas
+        function imgError(el, title) {
+            el.onerror = null;
+            el.src = `https://placehold.co/400x400/6366f1/ffffff?text=${encodeURIComponent(title)}`;
+        }
+
+        function renderAll() {
+            renderHero();
+            renderStore();
+            renderCategoryFilters();
+            updateCartUI();
+            renderAdminProducts();
+            updateAdminSelectors();
+        }
+
+        function renderHero() {
+            const highlight = allProducts.find(p => p.id === highlightedProductId) || allProducts[0];
+            if (!highlight) return;
+            document.getElementById('hero-title').innerText = highlight.title;
+            document.getElementById('hero-desc').innerText = highlight.description;
+            const imgEl = document.getElementById('hero-img');
+            imgEl.src = highlight.image;
+            imgEl.onerror = () => imgError(imgEl, highlight.title);
+            document.getElementById('hero-btn').innerText = `Ver Detalhes - R$ ${highlight.price.toFixed(2)}`;
+            document.getElementById('hero-btn').onclick = () => openProductModal(highlight.id);
+        }
+
+        function renderStore() {
+            const grid = document.getElementById('product-grid');
+            const filtered = activeCategory === 'Todos' ? allProducts : allProducts.filter(p => p.category === activeCategory);
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400 font-bold">Nenhum brinquedo encontrado.</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all group cursor-pointer border border-slate-100" onclick="openProductModal('${p.id}')">
+                    <div class="relative overflow-hidden aspect-square bg-slate-100">
+                        <img src="${p.image}" onerror="imgError(this, '${p.title}')" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute top-4 right-4">
+                            <span class="bg-white/90 backdrop-blur-md text-indigo-600 font-black text-[10px] px-3 py-1.5 rounded-full shadow-sm uppercase">${p.category}</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-1 truncate">${p.title}</h3>
+                        <div class="text-2xl font-black text-pink-500 mb-4">R$ ${p.price.toFixed(2)}</div>
+                        <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-full bg-indigo-50 text-indigo-600 font-bold py-3 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all">Adicionar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('category-filters');
+            container.innerHTML = allCategories.map(cat => `
+                <button onclick="filterByCategory('${cat}')" class="px-6 py-2 rounded-full text-sm font-bold transition-all ${activeCategory === cat ? 'bg-indigo-600 text-white scale-105 shadow-lg' : 'bg-white text-slate-500 hover:bg-slate-50'}">${cat}</button>
+            `).join('');
+        }
+
+        function filterByCategory(cat) { activeCategory = cat; renderCategoryFilters(); renderStore(); }
+
+        function addToCart(id) {
+            const product = allProducts.find(p => p.id === id);
+            const inCart = cart.find(item => item.id === id);
+            if (inCart) inCart.qty++; else cart.push({ ...product, qty: 1 });
+            localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(cart));
+            updateCartUI();
+            showNotification(`🚀 ${product.title} voou para o seu carrinho!`);
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((acc, item) => acc + item.qty, 0);
+            const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            document.getElementById('cart-count').innerText = count;
+            document.getElementById('cart-total').innerText = `R$ ${total.toFixed(2)}`;
+            const list = document.getElementById('cart-items');
+            if (cart.length === 0) {
+                list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center py-20"><span class="text-6xl mb-4">🧸</span><p class="text-slate-400 font-bold italic">Seu carrinho está vazio...</p></div>`;
+                return;
+            }
+            list.innerHTML = cart.map(item => `
+                <div class="flex gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <img src="${item.image}" onerror="imgError(this, '${item.title}')" class="w-16 h-16 object-cover rounded-xl shadow-sm">
+                    <div class="flex-1">
+                        <div class="flex justify-between font-bold text-slate-800 text-sm mb-1">
+                            <span class="truncate w-32">${item.title}</span>
+                            <button onclick="removeFromCart('${item.id}')" class="text-slate-300 hover:text-red-500">✕</button>
+                        </div>
+                        <div class="text-pink-500 font-black mb-2">R$ ${item.price.toFixed(2)}</div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="updateQty('${item.id}', -1)" class="w-8 h-8 flex items-center justify-center bg-white border rounded-lg">-</button>
+                            <span class="font-bold text-sm">${item.qty}</span>
+                            <button onclick="updateQty('${item.id}', 1)" class="w-8 h-8 flex items-center justify-center bg-white border rounded-lg">+</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.qty += delta;
+            if (item.qty <= 0) removeFromCart(id); else { localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(cart)); updateCartUI(); }
+        }
+
+        function removeFromCart(id) { cart = cart.filter(i => i.id !== id); localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(cart)); updateCartUI(); }
+        function toggleCart() {
+            const d = document.getElementById('cart-drawer');
+            const c = document.getElementById('cart-content');
+            d.classList.toggle('invisible'); d.classList.toggle('opacity-0');
+            c.classList.toggle('translate-x-full');
+        }
+        function checkout() { 
+            if (cart.length === 0) return;
+            cart = []; localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(cart)); 
+            updateCartUI(); toggleCart(); showNotification("🎉 Pedido finalizado com sucesso!");
+        }
+
+        function openProductModal(id) {
+            const product = allProducts.find(p => p.id === id);
+            if (!product) return;
+            const imgEl = document.getElementById('modal-img');
+            imgEl.src = product.image;
+            imgEl.onerror = () => imgError(imgEl, product.title);
+            document.getElementById('modal-title').innerText = product.title;
+            document.getElementById('modal-price').innerText = `R$ ${product.price.toFixed(2)}`;
+            document.getElementById('modal-desc').innerText = product.description;
+            document.getElementById('modal-category').innerText = product.category;
+            document.getElementById('modal-add-btn').onclick = () => { addToCart(product.id); closeProductModal(); };
+            document.getElementById('product-modal').classList.remove('hidden');
+            document.getElementById('product-modal').classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+            document.getElementById('product-modal').classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(viewId + '-view').classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function showNotification(msg) {
+            const el = document.getElementById('notification');
+            el.innerText = msg;
+            el.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => el.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        function handleLogin() { 
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+            if(user === 'admin' && pass === 'admin') showView('admin-dashboard');
+            else showNotification("❌ Acesso negado.");
+        }
+
+        function logout() { showView('store'); }
+
+        function resetToDefault() {
+            allProducts = [...seedProducts];
+            highlightedProductId = allProducts[0].id;
+            localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(allProducts));
+            localStorage.setItem(STORAGE_KEY_HIGHLIGHT, highlightedProductId);
+            renderAll();
+            showNotification("🔄 Catálogo original restaurado!");
+        }
+
+        function renderAdminProducts() {
+            const list = document.getElementById('admin-product-list');
+            list.innerHTML = allProducts.map(p => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 ${p.id === highlightedProductId ? 'bg-yellow-50' : ''}">
+                    <td class="px-6 py-4 flex items-center gap-3">
+                        <img src="${p.image}" onerror="imgError(this, '${p.title}')" class="w-10 h-10 object-cover rounded-lg shadow-sm">
+                        <div>
+                            <div class="font-bold text-sm text-slate-800">${p.title}</div>
+                            <div class="text-[10px] text-slate-400 font-black uppercase">${p.category}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-bold">R$ ${p.price.toFixed(2)}</td>
+                    <td class="px-6 py-4 text-center space-x-1">
+                        <button onclick="setAsHighlight('${p.id}')" title="Destaque" class="p-1 px-2 rounded ${p.id === highlightedProductId ? 'bg-yellow-400' : 'bg-slate-100'}">⭐</button>
+                        <button onclick="editProduct('${p.id}')" class="p-1 px-2 bg-blue-50 text-blue-600 rounded text-xs font-bold">Editar</button>
+                        <button onclick="deleteProduct('${p.id}')" class="p-1 px-2 bg-red-50 text-red-600 rounded text-xs font-bold">Excluir</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function setAsHighlight(id) {
+            highlightedProductId = id; localStorage.setItem(STORAGE_KEY_HIGHLIGHT, id);
+            renderHero(); renderAdminProducts(); showNotification("🌟 Novo destaque definido!");
+        }
+
+        function updateAdminSelectors() {
+            document.getElementById('p-category').innerHTML = allCategories.filter(c => c !== 'Todos').map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const newProduct = {
+                id: id || 'p' + Date.now(),
+                title: document.getElementById('p-title').value,
+                price: parseFloat(document.getElementById('p-price').value),
+                category: document.getElementById('p-category').value,
+                image: document.getElementById('p-image').value,
+                description: document.getElementById('p-description').value
+            };
+            if (id) {
+                const idx = allProducts.findIndex(p => p.id === id);
+                allProducts[idx] = newProduct;
+            } else allProducts.push(newProduct);
+            
+            localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(allProducts));
+            resetAdminForm(); renderAll(); showNotification("✅ Salvo com sucesso!");
+        }
+
+        function editProduct(id) {
+            const p = allProducts.find(item => item.id === id);
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('p-title').value = p.title;
+            document.getElementById('p-price').value = p.price;
+            document.getElementById('p-category').value = p.category;
+            document.getElementById('p-image').value = p.image;
+            document.getElementById('p-description').value = p.description;
+            document.getElementById('admin-form-mode').innerText = "Editando Brinquedo";
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetAdminForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('edit-id').value = "";
+            document.getElementById('admin-form-mode').innerText = "Novo Brinquedo";
+            document.getElementById('cancel-edit').classList.add('hidden');
+        }
+
+        function deleteProduct(id) {
+            if (highlightedProductId === id) { showNotification("⚠️ Mude o destaque antes de excluir!"); return; }
+            allProducts = allProducts.filter(p => p.id !== id);
+            localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(allProducts));
+            renderAll(); showNotification("🗑️ Brinquedo removido.");
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+
+<!--
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
 <meta charset="UTF-8">
 <title>OCI SaaS Demo</title>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -71,3 +563,4 @@ ReactDOM.createRoot(document.getElementById('app')).render(<App />)
 
 </body>
 </html>
+//-->
